@@ -31,6 +31,12 @@
 #include <string.h>
 #include "tmt.h"
 
+#ifdef __GNUC__
+#define UNUSED __attribute__((__unused__))
+#else
+#define UNUSED
+#endif
+
 #define BUF_MAX 100
 #define PAR_MAX 8
 #define TAB 8
@@ -42,10 +48,10 @@
 #define P1(x) (vt->pars[x]? vt->pars[x] : 1)
 #define CB(vt, m, a) ((vt)->cb? (vt)->cb(m, vt, a, (vt)->p) : (void)0)
 
-#define COMMON_VARS             \
-    TMTSCREEN *s = &vt->screen; \
-    TMTPOINT *c = &vt->curs;    \
-    TMTLINE *l = CURLINE(vt)
+#define COMMON_VARS                    \
+    TMTSCREEN *s UNUSED = &vt->screen; \
+    TMTPOINT *c UNUSED = &vt->curs;    \
+    TMTLINE *l UNUSED = CURLINE(vt)
 
 #define HANDLER(name) static void name (TMT *vt) { COMMON_VARS; 
 

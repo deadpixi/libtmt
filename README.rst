@@ -57,7 +57,7 @@ By default, libtmt uses only ISO standard C99 features.
 However, to support combining characters, it requires the POSIX-mandated
 `wcwidth` function.
 If your platform has a POSIX-compliant `wcwidth` function and you wish to
-support combining characters, compile tmt.c with `TME_HAS_WCWIDTH` defined.
+support combining characters, compile tmt.c with `TMT_HAS_WCWIDTH` defined.
 
 Here is a simple program fragment giving the flavor of libtmt:
 
@@ -388,7 +388,7 @@ Known Issues
 ============
 
 - Combining characters are "handled" by ignoring them
-  (when compiled with `HAS_WCWIDTH`) or by printing them separately.
+  (when compiled with `TMT_HAS_WCWIDTH`) or by printing them separately.
 - The documentation and error messages are available only in English.
 
 Frequently Asked Questions

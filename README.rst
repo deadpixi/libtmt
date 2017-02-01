@@ -430,7 +430,8 @@ all of the features.
 This leads to the sad state of affairs where if a terminal claims to be
 an xterm or to implement ECMA-48, you can't actually rely on it doing so,
 and have to stick to some ill-defined "common subset" of features that
-isn't really written down anywhere and varies from person to person.
+isn't really written down anywhere and the contents of which vary from
+person to person.
 
 I originally targeted the classic ANSI.SYS emulation from the days
 of MS-DOS.  That was a very simple terminal to emulate, but more modern
@@ -466,7 +467,7 @@ Why? There are two possibilities for a program doing terminal output:
 assume the terminal, or use terminfo/termcap.
 
 In the first case (assuming the terminal), the program just isn't going
-to work on some terminals, not just libtmt-based ones.
+to work on some terminals, and not just libtmt-based ones.
 
 In the later case (using terminfo/termcap), the program will work for any
 terminal with a terminfo entry.  As established above, mach and mach-color

@@ -64,9 +64,10 @@ Here is a simple program fragment giving the flavor of libtmt:
 
 .. code:: c
 
+
     #include <stdio.h>
     #include <stdlib.h>
-    #include <tmt.h>
+    #include "tmt.h"
 
     /* Forward declaration of a callback.
      * libtmt will call this function when the terminal's state changes.
@@ -76,11 +77,11 @@ Here is a simple program fragment giving the flavor of libtmt:
     int
     main(void)
     {
-        /* Open a virtual terminal with 25 lines and 80 columns.
+        /* Open a virtual terminal with 2 lines and 10 columns.
          * The final NULL is just a pointer that will be provided to the
          * callback; it can be anything.
          */
-        TMT *vt = tmt_open(25, 80, callback, NULL);
+        TMT *vt = tmt_open(2, 10, callback, NULL);
         if (!vt)
             return perror("could not allocate terminal"), EXIT_FAILURE;
 
@@ -93,7 +94,7 @@ Here is a simple program fragment giving the flavor of libtmt:
          * The final argument is the length of the input; 0 means that
          * libtmt will determine the length dynamically using strlen.
          */
-        tmt_write(vt, "\033[1mhello, world (in bold!)\033[0m", 0);
+        tmt_writemb(vt, "\033[1mhello, world (in bold!)\033[0m", 0);
 
         /* Writing input to the virtual terminal can (and in this case, did)
          * call the callback letting us know the screen was updated. See the
@@ -117,15 +118,14 @@ Here is a simple program fragment giving the flavor of libtmt:
                 printf("bing!\n");
                 break;
 
-            case TMT_UPDATE:
+            case TMT_MSG_UPDATE:
                 /* the screen image changed; a is a pointer to the TMTSCREEN */
                 for (size_t r = 0; r < s->nline; r++){
                     if (s->lines[r]->dirty){
                         for (size_t c = 0; c < s->ncol; c++){
-                            printf("contents of %zd,%zd: %lc\n", r, c,
-                                   s->lines[r]->chars[c].c);
-                            printf("is character bold: %s",
-                                   s->lines[r]->chars[c].a.bold? "yes" : "no");
+                            printf("contents of %zd,%zd: %lc (%s bold)\n", r, c,
+                                   s->lines[r]->chars[c].c,
+                                   s->lines[r]->chars[c].a.bold? "is" : "is not");
                         }
                     }
                 }
@@ -134,13 +134,12 @@ Here is a simple program fragment giving the flavor of libtmt:
                 tmt_clean(vt);
                 break;
 
-            case TMT_MOVED:
+            case TMT_MSG_MOVED:
                 /* the cursor moved; a is a pointer to the cursor's TMTPOINT */
-                fprintf("cursor is now at %zd,%zd\n", c->r, c->c);
+                printf("cursor is now at %zd,%zd\n", c->r, c->c);
                 break;
         }
     }
-
 
 The following data types and enums are used by the library:
 

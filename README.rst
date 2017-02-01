@@ -17,35 +17,35 @@ considerably easier to use.
 Major Features and Advantages
 =============================
 
-    Portable
-        Written in pure C99.
-        Optionally, the POSIX-mandated `wcwidth` function can be used, which
-        provides minimal support for combining characters.
+Portable
+    Written in pure C99.
+    Optionally, the POSIX-mandated `wcwidth` function can be used, which
+    provides minimal support for combining characters.
 
-    Small
-        Only 500 lines of C, including comments and whitespace.
+Small
+    Only 500 lines of C, including comments and whitespace.
 
-    Free
-        Released under a BSD-style license, free for commercial and
-        non-commerical use, with no restrictions on source code release or
-        redistribution.
+Free
+    Released under a BSD-style license, free for commercial and
+    non-commerical use, with no restrictions on source code release or
+    redistribution.
 
-    Simple
-        Only 9 functions to learn, and really you can get by with 6!
+Simple
+    Only 9 functions to learn, and really you can get by with 6!
 
-    International
-        libtmt internally uses wide characters exclusively, and uses your C
-        library's multibyte encoding functions.
-        This means that the library automatically supports any encoding that
-        your operating system does.
+International
+    libtmt internally uses wide characters exclusively, and uses your C
+    library's multibyte encoding functions.
+    This means that the library automatically supports any encoding that
+    your operating system does.
 
-    Works Out-of-the-Box
-        libtmt emulates a well-known terminal type (`mach` and/or `mach-color`),
-        the definitions of which have been in the terminfo database
-        since 1998.  There's no need to install a custom terminfo entry.
-        There's no claiming to be an xterm but only emulating a small subset
-        of its features. Any program using terminfo works automatically:
-        this includes vim, emacs, mc, cmus, nano, nethack, ...
+Works Out-of-the-Box
+    libtmt emulates a well-known terminal type (`mach` and/or `mach-color`),
+    the definitions of which have been in the terminfo database
+    since 1998.  There's no need to install a custom terminfo entry.
+    There's no claiming to be an xterm but only emulating a small subset
+    of its features. Any program using terminfo works automatically:
+    this includes vim, emacs, mc, cmus, nano, nethack, ...
 
 How to Use libtmt
 =================
@@ -342,9 +342,9 @@ The following escape sequences are recognized and will be processed specially:
 | `ESC # @`   | Insert # blank spaces, moving later characters right.                        |
 +-------------+------------------------------------------------------------------------------+
 
-==============   =======
+==============   ==================
 Rendition Code   Meaning
-==============   =======
+==============   ==================
 0                Normal text
 1                Bold
 2                Dim (half bright)
@@ -370,6 +370,7 @@ Rendition Code   Meaning
 45               Background magenta
 46               Background cyan
 47               Background white
+==============   ==================
 
 For those escape sequences that take arguments, the default for an empty or
 missing argument is the smallest meaningful number (which is 0 for `SGR`, `ED`,

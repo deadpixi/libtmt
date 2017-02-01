@@ -140,11 +140,11 @@ Here is a simple program fragment giving the flavor of libtmt:
                 break;
         }
     }
-```
+
 
 The following data types and enums are used by the library:
 
-```c
+.. code:: c
 
     /* an opaque structure */
     typedef struct TMT TMT;
@@ -222,70 +222,69 @@ The following data types and enums are used by the library:
         size_t ncol;     /* number of columns       */
         TMTLINE **lines; /* the lines on the screen */
     };
-```
 
 The following functions are available:
 
-    `TMT *tmt_open(size_t nrows, size_t ncols, TMTCALLBACK cb, VOID *p);`
-        Creates a new virtual terminal, with `nrows` rows and `ncols` columns.
-        The callback `cb` will be called on updates, and passed `p` as a final
-        argument. See the definition of `tmt_msg_t` above for possible values
-        of each argument to the callback.
+`TMT *tmt_open(size_t nrows, size_t ncols, TMTCALLBACK cb, VOID *p);`
+    Creates a new virtual terminal, with `nrows` rows and `ncols` columns.
+    The callback `cb` will be called on updates, and passed `p` as a final
+    argument. See the definition of `tmt_msg_t` above for possible values
+    of each argument to the callback.
 
-        Note that the callback must be ready to be called immediately, as it
-        will be called after initialization of the terminal is done, but before
-        the call to `tmt_open` returns.
+    Note that the callback must be ready to be called immediately, as it
+    will be called after initialization of the terminal is done, but before
+    the call to `tmt_open` returns.
 
-    `void tmt_close(TMT *vt)`
-        Close and free all resources associated with `vt`.
+`void tmt_close(TMT *vt)`
+    Close and free all resources associated with `vt`.
 
-    `bool tmt_resize(TMT *vt, size_t nrows, size_t ncols)`
-        Resize the virtual terminal to have `nrows` rows and `ncols` columns.
-        The contents of the area in common between the two sizes will be preserved.
+`bool tmt_resize(TMT *vt, size_t nrows, size_t ncols)`
+    Resize the virtual terminal to have `nrows` rows and `ncols` columns.
+    The contents of the area in common between the two sizes will be preserved.
 
-        If this function returns false, the resize failed (only possible in
-        out-of-memory conditions). If this happens, the terminal is trashed and
-        the only valid operation is the close the terminal (and, optionally,
-        open a new one).
+    If this function returns false, the resize failed (only possible in
+    out-of-memory conditions). If this happens, the terminal is trashed and
+    the only valid operation is the close the terminal (and, optionally,
+    open a new one).
 
-    `void tmt_write(TMT *vt, const wchar_t *w, size_t n);`
-        Write the wide-character string to the terminal, interpreting any escape
-        sequences contained threin, and update the screen image.  The last
-        argument is the length of the input in wide characters, if set to 0,
-        the length is determined using `wcslen`.
+`void tmt_write(TMT *vt, const wchar_t *w, size_t n);`
+    Write the wide-character string to the terminal, interpreting any escape
+    sequences contained threin, and update the screen image.  The last
+    argument is the length of the input in wide characters, if set to 0,
+    the length is determined using `wcslen`.
 
-        The terminal's callback function may be invoked one or more times before
-        calls to this function return.
+    The terminal's callback function may be invoked one or more times before
+    calls to this function return.
 
-    void tmt_writemb(TMT *vt, const char *s, size_t n);`
-        Write the provided string to the terminal, interpreting any escape
-        sequences contained threin, and update the screen image. The last
-        argument is the length of the input in wide characters, if set to 0,
-        the length is determined using `strlen`.
+void tmt_writemb(TMT *vt, const char *s, size_t n);`
+    Write the provided string to the terminal, interpreting any escape
+    sequences contained threin, and update the screen image. The last
+    argument is the length of the input in wide characters, if set to 0,
+    the length is determined using `strlen`.
 
-        The terminal's callback function may be invoked one or more times before
-        calls to this function return.
+    The terminal's callback function may be invoked one or more times before
+    calls to this function return.
 
-        The string is converted internally to a wide-character string using the
-        system's current multibyte encoding. Each terminal maintains a private
-        multibyte decoding state, and correctly handles mulitbyte characters that
-        span multiple calls to this function (that is, the final byte(s) of `s`
-        may be a partial mulitbyte character to be completed on the next call).
+    The string is converted internally to a wide-character string using the
+    system's current multibyte encoding. Each terminal maintains a private
+    multibyte decoding state, and correctly handles mulitbyte characters that
+    span multiple calls to this function (that is, the final byte(s) of `s`
+    may be a partial mulitbyte character to be completed on the next call).
 
-    `const TMTSCREEN *tmt_screen(const TMT *vt);`
-        Returns a pointer to the terminal's screen image.
+`const TMTSCREEN *tmt_screen(const TMT *vt);`
+    Returns a pointer to the terminal's screen image.
 
-    `const TMTPOINT *tmt_cursor(cosnt TMT *vt);`
-        Returns a pointer to the terminal's cursor position.
+`const TMTPOINT *tmt_cursor(cosnt TMT *vt);`
+    Returns a pointer to the terminal's cursor position.
 
-    `void tmt_clean(TMT *vt);`
-        Call this after receiving a `TMT_MSG_UPDATE` or `TMT_MSG_MOVED` callback
-        to let the library know that the program has handled all reported changes
-        to the screen image.
+`void tmt_clean(TMT *vt);`
+    Call this after receiving a `TMT_MSG_UPDATE` or `TMT_MSG_MOVED` callback
+    to let the library know that the program has handled all reported changes
+    to the screen image.
 
-    `void tmt_reset(TMT *vt);`
-        Resets the virtual terminal to its default state (colors, multibyte
-        decoding state, rendition, etc).
+`void tmt_reset(TMT *vt);`
+    Resets the virtual terminal to its default state (colors, multibyte
+    decoding state, rendition, etc).
 
 Supported Input and Escape Sequences
 ====================================

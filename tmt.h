@@ -29,6 +29,7 @@
 #define TMT_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <wchar.h>
 
 /**** INVALID WIDE CHARACTER INVALID CHAR */

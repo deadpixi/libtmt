@@ -100,6 +100,7 @@ Here is a simple program fragment giving the flavor of libtmt:
          * call the callback letting us know the screen was updated. See the
          * callback below to see how that works.
          */
+        tmt_close(vt);
         return EXIT_SUCCESS;
     }
 

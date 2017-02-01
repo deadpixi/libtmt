@@ -367,7 +367,7 @@ tmt_resize(TMT *vt, size_t nline, size_t ncol)
         for (size_t i = 0; i < nline; i++){
             if (i >= vt->aline)
                 vt->screen.lines[i] = NULL;
-            if (ncol > vt->acol)
+            if (ncol > vt->acol || i >= vt->aline)
                 vt->screen.lines[i] = allocline(vt, vt->screen.lines[i], ncol);
             if (!vt->screen.lines[i])
                 return freelines(vt, i), false;

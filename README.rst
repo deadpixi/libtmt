@@ -53,11 +53,11 @@ How to Use libtmt
 libtmt is a single C file and a single header.  Just include these files
 in your project and you should be good to go.
 
-By default, libtmt uses only ISO standard C99 features.
-However, to support combining characters, it requires the POSIX-mandated
-`wcwidth` function.
-If your platform has a POSIX-compliant `wcwidth` function and you wish to
-support combining characters, compile tmt.c with `TMT_HAS_WCWIDTH` defined.
+By default, libtmt uses only ISO standard C99 features,
+but see `Compile-Time Options`_ below.
+
+Example Code
+------------
 
 Here is a simple program fragment giving the flavor of libtmt:
 
@@ -142,7 +142,8 @@ Here is a simple program fragment giving the flavor of libtmt:
         }
     }
 
-The following data types and enums are used by the library:
+Data Types and Enumerations
+---------------------------
 
 .. code:: c
 
@@ -223,7 +224,8 @@ The following data types and enums are used by the library:
         TMTLINE **lines; /* the lines on the screen */
     };
 
-The following functions are available:
+Functions
+---------
 
 `TMT *tmt_open(size_t nrows, size_t ncols, TMTCALLBACK cb, VOID *p);`
     Creates a new virtual terminal, with `nrows` rows and `ncols` columns.
@@ -286,6 +288,54 @@ void tmt_writemb(TMT *vt, const char *s, size_t n);`
     Resets the virtual terminal to its default state (colors, multibyte
     decoding state, rendition, etc).
 
+Special Keys
+------------
+
+To send special keys to a program that is using libtmt for its display,
+write one of the `TMT_KEY_*` strings to that program's standard input
+(*not* to libtmt; it makes no sense to send any of these constants to
+libtmt itself).
+
+The following macros are defined, and are all constant strings:
+
+- TMT_KEY_UP
+- TMT_KEY_DOWN
+- TMT_KEY_RIGHT
+- TMT_KEY_LEFT
+- TMT_KEY_HOME
+- TMT_KEY_END
+- TMT_KEY_BACKSPACE
+- TMT_KEY_ESCAPE
+- TMT_KEY_PAGE_UP
+- TMT_KEY_PAGE_DOWN
+- TMT_KEY_F1 through TMT_KEY_F10
+
+Compile-Time Options
+--------------------
+
+There are two preprocessor macros that affect libtmt:
+
+`TMT_INVALID_CHAR`
+    Define this to a wide-character. This character will be added to
+    the virtual display when an invalid multibyte character sequence
+    is encountered.
+
+    By default (if you don't define it as something else before compiling),
+    this is `((wchar_t)0xfffd)`, which is the codepoint for the Unicode
+    'REPLACEMENT CHARACTER'. Note that your system might not use Unicode,
+    and its wide-character type might not be able to store a constant as
+    large as `0xfffd`, in which case you'll want to use an alternative.
+
+`TMT_HAS_WCWIDTH`
+    By default, libtmt uses only standard C99 features.  If you define
+    TMT_HAS_WCWIDTH before compiling, libtmt will use the POSIX `wcwidth`
+    function to detect combining characters.
+
+    Note that combining characters are still not handled particularly
+    well, regardless of whether this was defined. Also note that what
+    your C library's `wcwidth` considers a combining character and what
+    the written language in question considers one could be different.
+
 Supported Input and Escape Sequences
 ====================================
 
@@ -295,52 +345,52 @@ writing to the virtual terminal.
 
 The following escape sequences are recognized and will be processed specially:
 
-+-------------+------------------------------------------------------------------------------+
-| Sequence    |   Meaning                                                                    |
-+=============+==============================================================================+
-| `ESC c`     | Reset the terminal to its default state and clear the screen.                |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # A`   | Move the cursor up # rows.                                                   |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # B`   | Move the cursor down # rows.                                                 |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # C`   | Move the cursor right # columns.                                             |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # D`   | Move the cursor left # columns.                                              |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # E`   | Move the cursor to the beginning of the #th next row down.                   |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # F`   | Move the cursor to the beginning of the #th previous row up.                 |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # G`   | Move the cursor to the #th column.                                           |
-+-------------+------------------------------------------------------------------------------+
-| `ESC #;# H` | Move the cursor to the row and column specified.                             |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # J`   | - # = 0: clear from cursor to end of screen                                  |
-|             | - # = 1: clear from beginning of screen to cursor                            |
-|             | - # = 2: clear entire screen                                                 |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # K`   | - # = 0: clear from cursor to end of line                                    |
-|             | - # = 1: clear from beginning of line to cursor                              |
-|             | - # = 2: clear entire line                                                   |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # L`   | Insert # lines before the current line, scrolling lower lines down.          |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # M`   | Delete # lines (including the current line), scrolling lower lines up.       |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # P`   | Delete # characters, scrolling later characters left.                        |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # S`   | Scroll the screen up by # lines.                                             |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # T`   | Scroll the screen down by # lines.                                           |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # X`   | Overwrite # characters with spaces.                                          |
-+-------------+------------------------------------------------------------------------------+
-| `ESC #;...m`| Change the graphical rendition properties according to the table below.      |
-|             | Up to eight properties may be set in one command.                            |
-+-------------+------------------------------------------------------------------------------+
-| `ESC # @`   | Insert # blank spaces, moving later characters right.                        |
-+-------------+------------------------------------------------------------------------------+
++-------------+------------------------------------------------------------------------+
+| Sequence    |   Meaning                                                              |
++=============+========================================================================+
+| `ESC c`     | Reset the terminal to its default state and clear the screen.          |
++-------------+------------------------------------------------------------------------+
+| `ESC # A`   | Move the cursor up # rows.                                             |
++-------------+------------------------------------------------------------------------+
+| `ESC # B`   | Move the cursor down # rows.                                           |
++-------------+------------------------------------------------------------------------+
+| `ESC # C`   | Move the cursor right # columns.                                       |
++-------------+------------------------------------------------------------------------+
+| `ESC # D`   | Move the cursor left # columns.                                        |
++-------------+------------------------------------------------------------------------+
+| `ESC # E`   | Move the cursor to the beginning of the #th next row down.             |
++-------------+------------------------------------------------------------------------+
+| `ESC # F`   | Move the cursor to the beginning of the #th previous row up.           |
++-------------+------------------------------------------------------------------------+
+| `ESC # G`   | Move the cursor to the #th column.                                     |
++-------------+------------------------------------------------------------------------+
+| `ESC #;# H` | Move the cursor to the row and column specified.                       |
++-------------+------------------------------------------------------------------------+
+| `ESC # J`   | - # = 0: clear from cursor to end of screen                            |
+|             | - # = 1: clear from beginning of screen to cursor                      |
+|             | - # = 2: clear entire screen                                           |
++-------------+------------------------------------------------------------------------+
+| `ESC # K`   | - # = 0: clear from cursor to end of line                              |
+|             | - # = 1: clear from beginning of line to cursor                        |
+|             | - # = 2: clear entire line                                             |
++-------------+------------------------------------------------------------------------+
+| `ESC # L`   | Insert # lines before the current line, scrolling lower lines down.    |
++-------------+------------------------------------------------------------------------+
+| `ESC # M`   | Delete # lines (including the current line), scrolling lower lines up. |
++-------------+------------------------------------------------------------------------+
+| `ESC # P`   | Delete # characters, scrolling later characters left.                  |
++-------------+------------------------------------------------------------------------+
+| `ESC # S`   | Scroll the screen up by # lines.                                       |
++-------------+------------------------------------------------------------------------+
+| `ESC # T`   | Scroll the screen down by # lines.                                     |
++-------------+------------------------------------------------------------------------+
+| `ESC # X`   | Overwrite # characters with spaces.                                    |
++-------------+------------------------------------------------------------------------+
+| `ESC #;...m`| Change the graphical rendition properties according to the table below.|
+|             | Up to eight properties may be set in one command.                      |
++-------------+------------------------------------------------------------------------+
+| `ESC # @`   | Insert # blank spaces, moving later characters right.                  |
++-------------+------------------------------------------------------------------------+
 
 ==============   ==================
 Rendition Code   Meaning
@@ -382,7 +432,7 @@ the screen and the contents of the screen are not scrolled.
 Characters and lines moved off the side or bottom of screen are lost.
 
 Note that most users find blinking text annoying, and it can be dangerous for
-people who suffer from epilepsy.
+those who suffer from epilepsy and other conditions.
 
 Known Issues
 ============

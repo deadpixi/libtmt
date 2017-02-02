@@ -106,8 +106,7 @@ clearlines(TMT *vt, size_t r, size_t n)
 static void
 scrup(TMT *vt, size_t r, size_t n)
 {
-    if (r + n >= vt->screen.nline)
-        n = vt->screen.nline - 1 - r;
+    n = MIN(n, vt->screen.nline - 1 - r);
 
     if (n){
         TMTLINE *buf[n];
@@ -126,8 +125,7 @@ scrup(TMT *vt, size_t r, size_t n)
 static void
 scrdn(TMT *vt, size_t r, size_t n)
 {
-    if (r + n >= vt->screen.nline)
-        n = vt->screen.nline - 1 - r;
+    n = MIN(n, vt->screen.nline - 1 - r);
 
     if (n){
         TMTLINE *buf[n];

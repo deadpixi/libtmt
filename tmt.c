@@ -351,7 +351,7 @@ tmt_close(TMT *vt)
 bool
 tmt_resize(TMT *vt, size_t nline, size_t ncol)
 {
-    if (!nline || !ncol)
+    if (nline <= 2 || ncol <= 2)
         return false;
 
     if (nline > vt->aline || ncol > vt->acol){

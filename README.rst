@@ -31,7 +31,7 @@ Free
     redistribution.
 
 Simple
-    Only 9 functions to learn, and really you can get by with 6!
+    Only 10 functions to learn, and really you can get by with 6!
 
 International
     libtmt internally uses wide characters exclusively, and uses your C
@@ -239,6 +239,12 @@ Functions
 
 `void tmt_close(TMT *vt)`
     Close and free all resources associated with `vt`.
+
+`bool tmt_dirty(const TMT *vt)`
+    Returns true if `vt` has been modified since it was last drawn.
+    It is not usually necessary to call this function, as the callback
+    provided to `tmt_open` will be called with `TMT_MSG_UPDATE` whenever
+    `vt` is updated.
 
 `bool tmt_resize(TMT *vt, size_t nrows, size_t ncols)`
     Resize the virtual terminal to have `nrows` rows and `ncols` columns.

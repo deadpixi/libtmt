@@ -132,5 +132,6 @@ const TMTSCREEN *tmt_screen(const TMT *vt);
 const TMTPOINT *tmt_cursor(const TMT *vt);
 void tmt_clean(TMT *vt);
 void tmt_reset(TMT *vt);
+bool tmt_dirty(const TMT *vt);
 
 #endif

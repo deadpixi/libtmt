@@ -491,3 +491,9 @@ tmt_reset(TMT *vt)
     clearlines(vt, 0, vt->screen.nline);
     notify(vt, true, true);
 }
+
+bool
+tmt_dirty(const TMT *vt)
+{
+    return vt->dirty;
+}

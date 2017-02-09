@@ -413,10 +413,8 @@ tmt_write(TMT *vt, const wchar_t *w, size_t n)
     TMTPOINT oc = vt->curs;
     n = n? n : wcslen(w);
 
-    for (size_t i = 0; i < n; i++){
-        if (!handlechar(vt, w[i]))
-            writecharatcursor(vt, w[i]);
-    }
+    for (size_t i = 0; i < n; i++) if (!handlechar(vt, w[i]))
+        writecharatcursor(vt, w[i]);
 
     notify(vt, vt->dirty, memcmp(&oc, &vt->curs, sizeof(oc)) != 0);
 }

@@ -17,13 +17,21 @@ considerably easier to use.
 Major Features and Advantages
 =============================
 
+Works Out-of-the-Box
+    libtmt emulates a well-known terminal type (`mach` and/or `mach-color`),
+    the definitions of which have been in the terminfo database
+    since 1998.  There's no need to install a custom terminfo entry.
+    There's no claiming to be an xterm but only emulating a small subset
+    of its features. Any program using terminfo works automatically:
+    this includes vim, emacs, mc, cmus, nano, nethack, ...
+
 Portable
     Written in pure C99.
     Optionally, the POSIX-mandated `wcwidth` function can be used, which
     provides minimal support for combining characters.
 
 Small
-    Only 500 lines of C, including comments and whitespace.
+    Less than 500 lines of C, including comments and whitespace.
 
 Free
     Released under a BSD-style license, free for commercial and
@@ -38,14 +46,6 @@ International
     library's multibyte encoding functions.
     This means that the library automatically supports any encoding that
     your operating system does.
-
-Works Out-of-the-Box
-    libtmt emulates a well-known terminal type (`mach` and/or `mach-color`),
-    the definitions of which have been in the terminfo database
-    since 1998.  There's no need to install a custom terminfo entry.
-    There's no claiming to be an xterm but only emulating a small subset
-    of its features. Any program using terminfo works automatically:
-    this includes vim, emacs, mc, cmus, nano, nethack, ...
 
 How to Use libtmt
 =================

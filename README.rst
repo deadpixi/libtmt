@@ -349,7 +349,10 @@ Internally libtmt uses your C library's/compiler's idea of a wide character for
 all characters, so you should be able to use whatever characters you want when
 writing to the virtual terminal.
 
-The following escape sequences are recognized and will be processed specially:
+The following escape sequences are recognized and will be processed
+specially.  Note that programs that use standard terminfo/termcap
+mechanisms will work automatically, assuming they support the `mach` or
+`mach-color` terminal type.
 
 +-------------+-------------+------------------------------------------------------------------------+
 | Name        | Sequence    |   Meaning                                                              |
@@ -514,7 +517,7 @@ This latter terminal definition isn't always deployed.
 I then ended up targeting the `Minix`_ console, which was incredibly simple
 (only 16 escape sequences).  Sadly, one of the requirements of libtmt was
 to work transparently with multibyte characters in any multibyte encoding
-supported the operating sytem.  The common terminfo entry for minix maps
+supported the operating sytem.  The common terminfo entry for Minix maps
 box-drawing characters to a fixed set of codes with the high-bit set,
 which breaks many multibyte encoding schemes.  If libtmt stuck with Minix
 emulation, it would never support box drawing (and, what's worse, would
@@ -541,9 +544,9 @@ assume the terminal, or use terminfo/termcap.
 In the first case (assuming the terminal), the program just isn't going
 to work on some terminals, and not just libtmt-based ones.
 
-In the later case (using terminfo/termcap), the program will work for any
-terminal with a terminfo entry.  As established above, mach and mach-color
-have widely-deployed and stable terminfo entries.
+In the later case (using terminfo/termcap), the program will automatically
+work for any terminal with a terminfo entry.  As established above,
+mach and mach-color have widely-deployed and stable terminfo entries.
 
 It's true that libtmt lacks some of the more advanced features provided by,
 e.g. xterm, like mouse input tracking and terminal title setting. If you

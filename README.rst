@@ -351,52 +351,68 @@ writing to the virtual terminal.
 
 The following escape sequences are recognized and will be processed specially:
 
-+-------------+------------------------------------------------------------------------+
-| Sequence    |   Meaning                                                              |
-+=============+========================================================================+
-| `ESC c`     | Reset the terminal to its default state and clear the screen.          |
-+-------------+------------------------------------------------------------------------+
-| `ESC # A`   | Move the cursor up # rows.                                             |
-+-------------+------------------------------------------------------------------------+
-| `ESC # B`   | Move the cursor down # rows.                                           |
-+-------------+------------------------------------------------------------------------+
-| `ESC # C`   | Move the cursor right # columns.                                       |
-+-------------+------------------------------------------------------------------------+
-| `ESC # D`   | Move the cursor left # columns.                                        |
-+-------------+------------------------------------------------------------------------+
-| `ESC # E`   | Move the cursor to the beginning of the #th next row down.             |
-+-------------+------------------------------------------------------------------------+
-| `ESC # F`   | Move the cursor to the beginning of the #th previous row up.           |
-+-------------+------------------------------------------------------------------------+
-| `ESC # G`   | Move the cursor to the #th column.                                     |
-+-------------+------------------------------------------------------------------------+
-| `ESC #;# H` | Move the cursor to the row and column specified.                       |
-+-------------+------------------------------------------------------------------------+
-| `ESC # J`   | - # = 0: clear from cursor to end of screen                            |
-|             | - # = 1: clear from beginning of screen to cursor                      |
-|             | - # = 2: clear entire screen                                           |
-+-------------+------------------------------------------------------------------------+
-| `ESC # K`   | - # = 0: clear from cursor to end of line                              |
-|             | - # = 1: clear from beginning of line to cursor                        |
-|             | - # = 2: clear entire line                                             |
-+-------------+------------------------------------------------------------------------+
-| `ESC # L`   | Insert # lines before the current line, scrolling lower lines down.    |
-+-------------+------------------------------------------------------------------------+
-| `ESC # M`   | Delete # lines (including the current line), scrolling lower lines up. |
-+-------------+------------------------------------------------------------------------+
-| `ESC # P`   | Delete # characters, scrolling later characters left.                  |
-+-------------+------------------------------------------------------------------------+
-| `ESC # S`   | Scroll the screen up by # lines.                                       |
-+-------------+------------------------------------------------------------------------+
-| `ESC # T`   | Scroll the screen down by # lines.                                     |
-+-------------+------------------------------------------------------------------------+
-| `ESC # X`   | Overwrite # characters with spaces.                                    |
-+-------------+------------------------------------------------------------------------+
-| `ESC #;...m`| Change the graphical rendition properties according to the table below.|
-|             | Up to eight properties may be set in one command.                      |
-+-------------+------------------------------------------------------------------------+
-| `ESC # @`   | Insert # blank spaces, moving later characters right.                  |
-+-------------+------------------------------------------------------------------------+
++-------------+-------------+------------------------------------------------------------------------+
+| Name        | Sequence    |   Meaning                                                              |
++=============+=============+========================================================================+
+|             | `ESC c`     | Reset the terminal to its default state and clear the screen.          |
++-------------+-------------+------------------------------------------------------------------------+
+| CUU         | `ESC # A`   | Move the cursor up # rows.                                             |
+| Cursor Up   |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| CUD         | `ESC # B`   | Move the cursor down # rows.                                           |
+| Cursor Down |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| CUF Cursor  | `ESC # C`   | Move the cursor right # columns.                                       |
+| Forward     |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| CUB Cursor  | `ESC # D`   | Move the cursor left # columns.                                        |
+| Backward    |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| CNL Cursor  | `ESC # E`   | Move the cursor to the beginning of the #th next row down.             |
+| Next Line   |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| CPL Cursor  | `ESC # F`   | Move the cursor to the beginning of the #th previous row up.           |
+| Prev Line   |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| CHA Cursor  | `ESC # G`   | Move the cursor to the #th column.                                     |
+| Horiz  Abs  |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| CUP Cursor  | `ESC #;# H` | Move the cursor to the row and column specified.                       |
+| Position Abs|             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| ED          | `ESC # J`   | - # = 0: clear from cursor to end of screen                            |
+| Erase in    |             | - # = 1: clear from beginning of screen to cursor                      |
+| Display     |             | - # = 2: clear entire screen                                           |
++-------------+-------------+------------------------------------------------------------------------+
+| EL          | `ESC # K`   | - # = 0: clear from cursor to end of line                              |
+| Erase in    |             | - # = 1: clear from beginning of line to cursor                        |
+| Line        |             | - # = 2: clear entire line                                             |
++-------------+-------------+------------------------------------------------------------------------+
+| IL          | `ESC # L`   | Insert # lines before the current line, scrolling lower lines down.    |
+| Insert Line |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| DL          | `ESC # M`   | Delete # lines (including the current line), scrolling lower lines up. |
+| Delete Line |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| DCH         | `ESC # P`   | Delete # characters, scrolling later characters left.                  |
+| Delete Char |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| SU          | `ESC # S`   | Scroll the screen up by # lines.                                       |
+| Scroll Up   |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| SD          | `ESC # T`   | Scroll the screen down by # lines.                                     |
+| Scroll Down |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| ECH         | `ESC # X`   | Overwrite # characters with spaces.                                    |
+| Erase Char  |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| SGR         | `ESC #;...m`| Change the graphical rendition properties according to the table below.|
+| Set Graphic |             | Up to eight properties may be set in one command.                      |
+| Rendition   |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
+| ICH         | `ESC # @`   | Insert # blank spaces, moving later characters right.                  |
+| Insert Char |             |                                                                        |
++-------------+-------------+------------------------------------------------------------------------+
 
 ==============   ==================
 Rendition Code   Meaning

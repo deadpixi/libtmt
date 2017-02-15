@@ -315,11 +315,9 @@ allocline(TMT *vt, TMTLINE *o, size_t n)
 static void
 freelines(TMT *vt, size_t n)
 {
-    if (vt->screen.lines){
-        for (size_t i = 0; i < n; i++)
-            free(vt->screen.lines[i]);
-        free(vt->screen.lines);
-    }
+    for (size_t i = 0; vt->screen.lines && i < n; i++)
+        free(vt->screen.lines[i]);
+    free(vt->screen.lines);
 }
 
 TMT *

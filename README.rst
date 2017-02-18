@@ -591,7 +591,7 @@ type, and reduced functionality.
 
 In all my testing, I only found one program that didn't work correctly by
 default with libtmt: recent versions of Debian's `apt`_ assume a terminal
-with definable scrolling regions to draw a facing progress bar during
+with definable scrolling regions to draw a fancy progress bar during
 package installation.  Using apt in its default configuration in libtmt will
 result in a corrupted display (that can be fixed by clearing the screen).
 

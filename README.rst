@@ -316,6 +316,10 @@ The following macros are defined, and are all constant strings:
 - TMT_KEY_PAGE_DOWN
 - TMT_KEY_F1 through TMT_KEY_F10
 
+Note also that the classic mach console sent the enter key as
+a carriage return, not a newline. Many programs don't care,
+but some do.
+
 Compile-Time Options
 --------------------
 

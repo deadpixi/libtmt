@@ -30,27 +30,21 @@
 #include <string.h>
 #include "tmt.h"
 
-#ifdef __GNUC__
-#define UNUSED __attribute__((__unused__))
-#else
-#define UNUSED
-#endif
-
 #define BUF_MAX 100
 #define PAR_MAX 8
 #define TAB 8
 #define MAX(x, y) (((size_t)(x) > (size_t)(y)) ? (size_t)(x) : (size_t)(y))
 #define MIN(x, y) (((size_t)(x) < (size_t)(y)) ? (size_t)(x) : (size_t)(y))
-#define CURLINE(vt) (vt)->screen.lines[(vt)->curs.r]
+#define CLINE(vt) (vt)->screen.lines[MIN((vt)->curs.r, (vt)->screen.nline - 1)]
 
 #define P0(x) (vt->pars[x])
 #define P1(x) (vt->pars[x]? vt->pars[x] : 1)
 #define CB(vt, m, a) ((vt)->cb? (vt)->cb(m, vt, a, (vt)->p) : (void)0)
 
 #define COMMON_VARS                    \
-    TMTSCREEN *s UNUSED = &vt->screen; \
-    TMTPOINT *c UNUSED = &vt->curs;    \
-    TMTLINE *l UNUSED = CURLINE(vt)
+    TMTSCREEN *s = &vt->screen; \
+    TMTPOINT *c = &vt->curs;    \
+    TMTLINE *l = CLINE(vt)
 
 #define HANDLER(name) static void name (TMT *vt) { COMMON_VARS; 
 
@@ -144,7 +138,7 @@ HANDLER(ed)
 
     switch (P0(0)){
         case 0: b = c->r + 1; clearline(vt, l, c->c, vt->screen.ncol); break;
-        case 1: e = c->r - 1; clearline(vt, l, 0, c->c);               break;
+        case 1: e = MIN(c->r - 1, 0); clearline(vt, l, 0, c->c);       break;
         case 2:  /* use defaults */                                    break;
         default: /* do nothing   */                                    return;
     }
@@ -242,7 +236,7 @@ handlechar(TMT *vt, wchar_t w)
     #define SC(S, C) (((S) << CHAR_BIT) | (int)(C))
     #define ON(S, C, A) case SC(S, C) : A ; return true
     #define DO(S, C, A) case SC(S, C):do {                              \
-        consumearg(vt); A; resetparser(vt); fixcursor(vt); return true; \
+        consumearg(vt); A; fixcursor(vt); resetparser(vt); return true; \
     } while (false)
 
     switch (SC(vt->state, w)){
@@ -283,7 +277,7 @@ handlechar(TMT *vt, wchar_t w)
         DO(S_ARG, L'P', dch(vt));
         DO(S_ARG, L'S', scrup(vt, 0, P1(0)));
         DO(S_ARG, L'T', scrdn(vt, 0, P1(0)));
-        DO(S_ARG, L'X', clearline(vt, l, c->c, P1(0)));
+        DO(S_ARG, L'X', clearline(vt, l, c->c, MIN(P1(0), s->ncol - 1)));
         DO(S_ARG, L'm', sgr(vt));
         DO(S_ARG, L'@', ich(vt));
     }
@@ -389,9 +383,9 @@ writecharatcursor(TMT *vt, wchar_t w)
         return;
     #endif
 
-    CURLINE(vt)->chars[vt->curs.c].c = w;
-    CURLINE(vt)->chars[vt->curs.c].a = vt->attrs;
-    CURLINE(vt)->dirty = vt->dirty = true;
+    CLINE(vt)->chars[vt->curs.c].c = w;
+    CLINE(vt)->chars[vt->curs.c].a = vt->attrs;
+    CLINE(vt)->dirty = vt->dirty = true;
 
     if (c->c < s->ncol - 1)
         c->c++;

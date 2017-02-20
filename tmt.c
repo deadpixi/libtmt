@@ -153,8 +153,8 @@ HANDLER(ich)
         n = s->ncol - c->c;
 
     memmove(l->chars + c->c + n, l->chars + c->c,
-            (s->ncol - c->c - n) * sizeof(TMTCHAR));
-    clearline(vt, l, c->c, vt->screen.nline);
+            MIN(s->ncol - 1, (s->ncol - c->c - n - 1)) * sizeof(TMTCHAR));
+    clearline(vt, l, c->c, n);
 }
 
 HANDLER(dch)
@@ -166,7 +166,7 @@ HANDLER(dch)
     memmove(l->chars + c->c, l->chars + c->c + n,
             (s->ncol - c->c - n) * sizeof(TMTCHAR));
 
-    clearline(vt, l, c->c, vt->screen.nline);
+    clearline(vt, l, c->c, n);
 }
 
 HANDLER(el)

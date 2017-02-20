@@ -81,7 +81,7 @@ static void
 clearline(TMT *vt, TMTLINE *l, size_t s, size_t e)
 {
     vt->dirty = l->dirty = true;
-    for (size_t i = s; i < e; i++){
+    for (size_t i = s; i < e && i < vt->screen.ncol; i++){
         l->chars[i].a = vt->attrs;
         l->chars[i].c = L' ';
     }
@@ -90,7 +90,7 @@ clearline(TMT *vt, TMTLINE *l, size_t s, size_t e)
 static void
 clearlines(TMT *vt, size_t r, size_t n)
 {
-    for (size_t i = r; i < r + n; i++)
+    for (size_t i = r; i < r + n && i < vt->screen.nline; i++)
         clearline(vt, vt->screen.lines[i], 0, vt->screen.ncol);
 }
 
@@ -138,7 +138,7 @@ HANDLER(ed)
 
     switch (P0(0)){
         case 0: b = c->r + 1; clearline(vt, l, c->c, vt->screen.ncol); break;
-        case 1: e = MIN(c->r - 1, 0); clearline(vt, l, 0, c->c);       break;
+        case 1: e = c->r - 1; clearline(vt, l, 0, c->c);               break;
         case 2:  /* use defaults */                                    break;
         default: /* do nothing   */                                    return;
     }
@@ -149,11 +149,12 @@ HANDLER(ed)
 HANDLER(ich)
     size_t n = P1(0);
 
-    if (n > s->ncol - c->c)
-        n = s->ncol - c->c;
+    if (n > s->ncol - c->c - 1)
+        n = s->ncol - c->c - 1;
 
     memmove(l->chars + c->c + n, l->chars + c->c,
-            MIN(s->ncol - 1, (s->ncol - c->c - n - 1)) * sizeof(TMTCHAR));
+            MIN(s->ncol - 1 - c->c,
+            (s->ncol - c->c - n - 1)) * sizeof(TMTCHAR));
     clearline(vt, l, c->c, n);
 }
 
@@ -293,13 +294,13 @@ notify(TMT *vt, bool update, bool moved)
 }
 
 static TMTLINE *
-allocline(TMT *vt, TMTLINE *o, size_t n)
+allocline(TMT *vt, TMTLINE *o, size_t n, size_t pc)
 {
     TMTLINE *l = realloc(o, sizeof(TMTLINE) + n * sizeof(TMTCHAR));
     if (!l)
         return NULL;
 
-    clearline(vt, l, o? vt->screen.ncol : 0, n);
+    clearline(vt, l, pc, n);
     return l;
 }
 
@@ -351,19 +352,19 @@ tmt_resize(TMT *vt, size_t nline, size_t ncol)
     TMTLINE **l = realloc(vt->screen.lines, nline * sizeof(TMTLINE *));
     if (!l) return false;
 
+    size_t pc = vt->screen.ncol;
     vt->screen.lines = l;
+    vt->screen.ncol = ncol;
     for (size_t i = 0; i < nline; i++){
         TMTLINE *nl = NULL;
         if (i >= vt->screen.nline)
-            nl = vt->screen.lines[i] = allocline(vt, NULL, ncol);
+            nl = vt->screen.lines[i] = allocline(vt, NULL, ncol, 0);
         else
-            nl = allocline(vt, vt->screen.lines[i], ncol);
+            nl = allocline(vt, vt->screen.lines[i], ncol, pc);
 
-        if (!nl)
-            return false;
+        if (!nl) return false;
         vt->screen.lines[i] = nl;
     }
-    vt->screen.ncol = ncol;
     vt->screen.nline = nline;
 
     fixcursor(vt);

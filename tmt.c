@@ -41,7 +41,7 @@
 #define P1(x) (vt->pars[x]? vt->pars[x] : 1)
 #define CB(vt, m, a) ((vt)->cb? (vt)->cb(m, vt, a, (vt)->p) : (void)0)
 
-#define COMMON_VARS                    \
+#define COMMON_VARS             \
     TMTSCREEN *s = &vt->screen; \
     TMTPOINT *c = &vt->curs;    \
     TMTLINE *l = CLINE(vt)
@@ -167,7 +167,7 @@ HANDLER(dch)
     memmove(l->chars + c->c, l->chars + c->c + n,
             (s->ncol - c->c - n) * sizeof(TMTCHAR));
 
-    clearline(vt, l, c->c, n);
+    clearline(vt, l, s->ncol - c->c - n, s->ncol - n);
 }
 
 HANDLER(el)
@@ -278,7 +278,7 @@ handlechar(TMT *vt, wchar_t w)
         DO(S_ARG, L'P', dch(vt));
         DO(S_ARG, L'S', scrup(vt, 0, P1(0)));
         DO(S_ARG, L'T', scrdn(vt, 0, P1(0)));
-        DO(S_ARG, L'X', clearline(vt, l, c->c, MIN(P1(0), s->ncol - 1)));
+        DO(S_ARG, L'X', clearline(vt, l, c->c, P1(0)));
         DO(S_ARG, L'm', sgr(vt));
         DO(S_ARG, L'@', ich(vt));
     }

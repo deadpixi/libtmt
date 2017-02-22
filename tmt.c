@@ -68,7 +68,7 @@ struct TMT{
     enum {S_NUL, S_ESC, S_ARG} state;
 };
 
-static TMTATTRS defattrs = {0, .fg = TMT_COLOR_WHITE, .bg = TMT_COLOR_BLACK};
+static TMTATTRS defattrs = {.fg = TMT_COLOR_DEFAULT, .bg = TMT_COLOR_DEFAULT};
 
 static void
 dirtylines(TMT *vt, size_t s, size_t e)
@@ -323,7 +323,6 @@ tmt_open(size_t nline, size_t ncol, TMTCALLBACK cb, void *p)
     if (!nline || !ncol || !vt)
         return free(vt), NULL;
 
-    vt->attrs = defattrs;
     vt->cb = cb;
     vt->p = p;
 
@@ -378,9 +377,10 @@ writecharatcursor(TMT *vt, wchar_t w)
 {
     COMMON_VARS;
 
+    int nc = 1;
     #ifdef TMT_HAS_WCWIDTH
     int wcwidth(wchar_t c);
-    if (wcwidth(w) <= 0)
+    if ((nc = wcwidth(w)) <= 0)
         return;
     #endif
 
@@ -388,8 +388,8 @@ writecharatcursor(TMT *vt, wchar_t w)
     CLINE(vt)->chars[vt->curs.c].a = vt->attrs;
     CLINE(vt)->dirty = vt->dirty = true;
 
-    if (c->c < s->ncol - 1)
-        c->c++;
+    if (c->c < s->ncol - nc)
+        c->c += nc;
     else{
         c->c = 0;
         c->r++;

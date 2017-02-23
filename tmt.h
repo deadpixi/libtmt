@@ -117,6 +117,7 @@ struct TMTSCREEN{
 typedef enum{
     TMT_MSG_MOVED,
     TMT_MSG_UPDATE,
+    TMT_MSG_ANSWER,
     TMT_MSG_BELL
 } tmt_msg_t;
 

@@ -26,6 +26,7 @@
  */
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "tmt.h"
@@ -225,6 +226,12 @@ HANDLER(rep)
         writecharatcurs(vt, r);
 }
 
+HANDLER(dsr)
+    char r[BUF_MAX + 1] = {0};
+    snprintf(r, BUF_MAX, "\033[%zd;%zdR", c->r, c->c);
+    CB(vt, TMT_MSG_ANSWER, (const char *)r);
+}
+
 HANDLER(resetparser)
     memset(vt->pars, 0, sizeof(vt->pars));
     vt->state = vt->npar = vt->arg = vt->ignored = (bool)0;
@@ -286,8 +293,10 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "X",          clearline(vt, l, c->c, P1(0)))
     DO(S_ARG, "Z",          while (c->c && t[--c->c].c != L'*'))
     DO(S_ARG, "b",          rep(vt));
+    DO(S_ARG, "c",          CB(vt, TMT_MSG_ANSWER, "\033[?6c"))
     DO(S_ARG, "g",          if (P0(0) == 3) clearline(vt, vt->tabs, 0, s->ncol))
     DO(S_ARG, "m",          sgr(vt))
+    DO(S_ARG, "n",          if (P0(0) == 6) dsr(vt))
     DO(S_ARG, "i",          (void)0)
     DO(S_ARG, "@",          ich(vt))
 

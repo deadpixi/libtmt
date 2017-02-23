@@ -123,15 +123,14 @@ typedef enum{
 typedef void (*TMTCALLBACK)(tmt_msg_t m, struct TMT *v, const void *r, void *p);
 
 /**** PUBLIC FUNCTIONS */
-TMT *tmt_open(size_t nline, size_t ncol, TMTCALLBACK cb, void *p);
+TMT *tmt_open(size_t nline, size_t ncol, TMTCALLBACK cb, void *p,
+              const wchar_t *acs);
 void tmt_close(TMT *vt);
 bool tmt_resize(TMT *vt, size_t nline, size_t ncol);
-void tmt_write(TMT *vt, const wchar_t *w, size_t n);
-void tmt_writemb(TMT *vt, const char *s, size_t n);
+void tmt_write(TMT *vt, const char *s, size_t n);
 const TMTSCREEN *tmt_screen(const TMT *vt);
 const TMTPOINT *tmt_cursor(const TMT *vt);
 void tmt_clean(TMT *vt);
 void tmt_reset(TMT *vt);
-bool tmt_dirty(const TMT *vt);
 
 #endif

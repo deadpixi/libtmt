@@ -179,33 +179,27 @@ HANDLER(el)
 }
 
 HANDLER(sgr)
+    #define FGBG(c) *(P0(i) < 40? &vt->attrs.fg : &vt->attrs.bg) = c
     for (size_t i = 0; i < vt->npar; i++){
         switch (P0(i)){
-            case  0: vt->attrs = defattrs;             break;
-            case  1: vt->attrs.bold = true;            break;
-            case  2: vt->attrs.dim = true;             break;
+            case  0: vt->attrs           = defattrs;   break;
+            case  1: vt->attrs.bold      = true;       break;
+            case  2: vt->attrs.dim       = true;       break;
             case  4: vt->attrs.underline = true;       break;
-            case  5: vt->attrs.blink = true;           break;
-            case  7: vt->attrs.reverse = true;         break;
+            case  5: vt->attrs.blink     = true;       break;
+            case  7: vt->attrs.reverse   = true;       break;
             case  8: vt->attrs.invisible = true;       break;
             case 24: vt->attrs.underline = false;      break;
-            case 27: vt->attrs.reverse = false;        break;
-            case 30: vt->attrs.fg = TMT_COLOR_BLACK;   break;
-            case 31: vt->attrs.fg = TMT_COLOR_RED;     break;
-            case 32: vt->attrs.fg = TMT_COLOR_GREEN;   break;
-            case 33: vt->attrs.fg = TMT_COLOR_YELLOW;  break;
-            case 34: vt->attrs.fg = TMT_COLOR_BLUE;    break;
-            case 35: vt->attrs.fg = TMT_COLOR_MAGENTA; break;
-            case 36: vt->attrs.fg = TMT_COLOR_CYAN;    break;
-            case 37: vt->attrs.fg = TMT_COLOR_WHITE;   break;
-            case 40: vt->attrs.bg = TMT_COLOR_BLACK;   break;
-            case 41: vt->attrs.bg = TMT_COLOR_RED;     break;
-            case 42: vt->attrs.bg = TMT_COLOR_GREEN;   break;
-            case 43: vt->attrs.bg = TMT_COLOR_YELLOW;  break;
-            case 44: vt->attrs.bg = TMT_COLOR_BLUE;    break;
-            case 45: vt->attrs.bg = TMT_COLOR_MAGENTA; break;
-            case 46: vt->attrs.bg = TMT_COLOR_CYAN;    break;
-            case 47: vt->attrs.bg = TMT_COLOR_WHITE;   break;
+            case 27: vt->attrs.reverse   = false;      break;
+            case 30: case 40: FGBG(TMT_COLOR_BLACK);   break;
+            case 31: case 41: FGBG(TMT_COLOR_RED);     break;
+            case 32: case 42: FGBG(TMT_COLOR_GREEN);   break;
+            case 33: case 43: FGBG(TMT_COLOR_YELLOW);  break;
+            case 34: case 44: FGBG(TMT_COLOR_BLUE);    break;
+            case 35: case 45: FGBG(TMT_COLOR_MAGENTA); break;
+            case 36: case 46: FGBG(TMT_COLOR_CYAN);    break;
+            case 37: case 47: FGBG(TMT_COLOR_WHITE);   break;
+            case 39: case 48: FGBG(TMT_COLOR_DEFAULT); break;
         }
     }
 }

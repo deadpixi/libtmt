@@ -246,9 +246,6 @@ handlechar(TMT *vt, char i)
 {
     COMMON_VARS;
 
-    if (i > UCHAR_MAX || i == 0)
-        return resetparser(vt), false;
-
     char cs[] = {i, 0};
     #define ON(S, C, A) if (vt->state == (S) && strchr(C, i)){ A; return true;}
     #define DO(S, C, A) ON(S, C, consumearg(vt); if (!vt->ignored) {A;} \
@@ -262,7 +259,7 @@ handlechar(TMT *vt, char i)
     ON(S_NUL, "\x1b",       vt->state = S_ESC)
     ON(S_ESC, "\x1b",       vt->state = S_ESC)
     DO(S_ESC, "H",          t[c->c].c = L'*')
-    ON(S_ESC, "+*()",       vt->ignored = true)
+    ON(S_ESC, "+*()",       vt->ignored = true; vt->state = S_ARG)
     DO(S_ESC, "c",          tmt_reset(vt))
     ON(S_ESC, "[",          vt->state = S_ARG)
     ON(S_ARG, "\x1b",       vt->state = S_ESC)

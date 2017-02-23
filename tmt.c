@@ -73,6 +73,7 @@ struct TMT{
 };
 
 static TMTATTRS defattrs = {.fg = TMT_COLOR_DEFAULT, .bg = TMT_COLOR_DEFAULT};
+static void writecharatcurs(TMT *vt, wchar_t w);
 
 static wchar_t
 tacs(const TMT *vt, unsigned char c)
@@ -217,6 +218,13 @@ HANDLER(sgr)
     }
 }
 
+HANDLER(rep)
+    if (!c->c) return;
+    wchar_t r = l->chars[c->c - 1].c;
+    for (size_t i = c->c; i < P1(0); i++)
+        writecharatcurs(vt, r);
+}
+
 HANDLER(resetparser)
     memset(vt->pars, 0, sizeof(vt->pars));
     vt->state = vt->npar = vt->arg = vt->ignored = (bool)0;
@@ -280,6 +288,7 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "T",          scrdn(vt, 0, P1(0)))
     DO(S_ARG, "X",          clearline(vt, l, c->c, P1(0)))
     DO(S_ARG, "Z",          while (c->c && t[--c->c].c != L'*'))
+    DO(S_ARG, "b",          rep(vt));
     DO(S_ARG, "g",          if (P0(0) == 3) clearline(vt, vt->tabs, 0, s->ncol))
     DO(S_ARG, "m",          sgr(vt))
     DO(S_ARG, "i",          (void)0)
@@ -354,6 +363,9 @@ tmt_resize(TMT *vt, size_t nline, size_t ncol)
 
     vt->tabs = allocline(vt, vt->tabs, ncol, 0);
     if (!vt->tabs) return free(l), false;
+    vt->tabs->chars[0].c = vt->tabs->chars[ncol - 1].c = L'*';
+    for (size_t i = 0; i < ncol; i++) if (i % TAB == 0)
+        vt->tabs->chars[i].c = L'*';
 
     size_t pc = vt->screen.ncol;
     vt->screen.lines = l;

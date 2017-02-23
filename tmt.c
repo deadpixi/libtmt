@@ -102,7 +102,7 @@ clearline(TMT *vt, TMTLINE *l, size_t s, size_t e)
 {
     vt->dirty = l->dirty = true;
     for (size_t i = s; i < e && i < vt->screen.ncol; i++){
-        l->chars[i].a = vt->attrs;
+        l->chars[i].a = defattrs;
         l->chars[i].c = L' ';
     }
 }

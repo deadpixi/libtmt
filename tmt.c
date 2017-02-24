@@ -367,12 +367,6 @@ tmt_resize(TMT *vt, size_t nline, size_t ncol)
     TMTLINE **l = realloc(vt->screen.lines, nline * sizeof(TMTLINE *));
     if (!l) return false;
 
-    vt->tabs = allocline(vt, vt->tabs, ncol, 0);
-    if (!vt->tabs) return free(l), false;
-    vt->tabs->chars[0].c = vt->tabs->chars[ncol - 1].c = L'*';
-    for (size_t i = 0; i < ncol; i++) if (i % TAB == 0)
-        vt->tabs->chars[i].c = L'*';
-
     size_t pc = vt->screen.ncol;
     vt->screen.lines = l;
     vt->screen.ncol = ncol;
@@ -387,6 +381,12 @@ tmt_resize(TMT *vt, size_t nline, size_t ncol)
         vt->screen.lines[i] = nl;
     }
     vt->screen.nline = nline;
+
+    vt->tabs = allocline(vt, vt->tabs, ncol, 0);
+    if (!vt->tabs) return free(l), false;
+    vt->tabs->chars[0].c = vt->tabs->chars[ncol - 1].c = L'*';
+    for (size_t i = 0; i < ncol; i++) if (i % TAB == 0)
+        vt->tabs->chars[i].c = L'*';
 
     fixcursor(vt);
     dirtylines(vt, 0, nline);

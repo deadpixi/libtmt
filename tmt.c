@@ -52,8 +52,8 @@
 #define HANDLER(name) static void name (TMT *vt) { COMMON_VARS; 
 
 struct TMT{
-    TMTPOINT curs, savedcurs;
-    TMTATTRS attrs, savedattrs;
+    TMTPOINT curs, oldcurs;
+    TMTATTRS attrs, oldattrs;
 
     bool dirty, acs, ignored;
     TMTSCREEN screen;
@@ -266,6 +266,8 @@ handlechar(TMT *vt, char i)
     ON(S_NUL, "\x1b",       vt->state = S_ESC)
     ON(S_ESC, "\x1b",       vt->state = S_ESC)
     DO(S_ESC, "H",          t[c->c].c = L'*')
+    DO(S_ESC, "7",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
+    DO(S_ESC, "8",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
     ON(S_ESC, "+*()",       vt->ignored = true; vt->state = S_ARG)
     DO(S_ESC, "c",          tmt_reset(vt))
     ON(S_ESC, "[",          vt->state = S_ARG)
@@ -298,6 +300,8 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "m",          sgr(vt))
     DO(S_ARG, "n",          if (P0(0) == 6) dsr(vt))
     DO(S_ARG, "i",          (void)0)
+    DO(S_ESC, "s",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
+    DO(S_ESC, "u",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
     DO(S_ARG, "@",          ich(vt))
 
     return resetparser(vt), false;
@@ -487,9 +491,9 @@ tmt_clean(TMT *vt)
 void
 tmt_reset(TMT *vt)
 {
-    vt->curs.r = vt->curs.c = vt->savedcurs.r = vt->savedcurs.c = vt->acs = (bool)0;
+    vt->curs.r = vt->curs.c = vt->oldcurs.r = vt->oldcurs.c = vt->acs = (bool)0;
     resetparser(vt);
-    vt->attrs = vt->savedattrs = defattrs;
+    vt->attrs = vt->oldattrs = defattrs;
     memset(&vt->ms, 0, sizeof(vt->ms));
     clearlines(vt, 0, vt->screen.nline);
     notify(vt, true, true);

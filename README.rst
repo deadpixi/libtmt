@@ -547,6 +547,15 @@ Rendition Code   Meaning
 49               Background default color
 ==============   =================================================
 
+Other escape sequences are recognized but ignored.  This includes escape
+sequences for switching out codesets (officially, all code sets are defined
+as equivalent in libtmt), and the various "Media Copy" escape sequences
+used to print output on paper (officially, there is no printer attached
+to libtmt).
+
+Additionally, "?" characters are stripped out of escape sequence parameter
+lists for compatibility purposes.
+
 Known Issues
 ============
 

@@ -252,7 +252,7 @@ Functions
     Terminals must have a size of at least two rows and two columns.
 
     `acs` specifies the characters to use when in Alternate Character Set
-    (ACS) mode. The default string is::
+    (ACS) mode. The default string is (used if `NULL` is specified)::
 
          L"><^v#+:o##+++++~---_++++|<>*!fo"
 

@@ -560,6 +560,8 @@ Known Issues
 
 - Combining characters are "handled" by ignoring them
   (when compiled with `TMT_HAS_WCWIDTH`) or by printing them separately.
+- Double-width characters are rendered as single-width invalid
+  characters.
 - The documentation and error messages are available only in English.
 
 Frequently Asked Questions
@@ -570,7 +572,7 @@ What programs work with libtmt?
 
 Pretty much all of them.  Any program that doesn't assume what terminal
 it's running under should work without problem; this includes any program
-that uses the terminfo, termcap, or (pd|n)curses libraries.  Any program
+that uses the terminfo, termcap, or (pd|n)?curses libraries.  Any program
 that assumes it's running under some specific terminal might fail if its
 assumption is wrong, and not just under libtmt.
 

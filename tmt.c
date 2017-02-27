@@ -299,7 +299,9 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "g",          if (P0(0) == 3) clearline(vt, vt->tabs, 0, s->ncol))
     DO(S_ARG, "m",          sgr(vt))
     DO(S_ARG, "n",          if (P0(0) == 6) dsr(vt))
+    DO(S_ARG, "h",          if (P0(0) == 25) CB(vt, TMT_MSG_CURSOR, "t"))
     DO(S_ARG, "i",          (void)0)
+    DO(S_ARG, "l",          if (P0(0) == 25) CB(vt, TMT_MSG_CURSOR, "f"))
     DO(S_ARG, "s",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
     DO(S_ARG, "u",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
     DO(S_ARG, "@",          ich(vt))
@@ -331,7 +333,6 @@ freelines(TMT *vt, size_t s, size_t n, bool screen)
         free(vt->screen.lines[i]);
         vt->screen.lines[i] = NULL;
     }
-
     if (screen) free(vt->screen.lines);
 }
 
@@ -362,9 +363,7 @@ tmt_close(TMT *vt)
 bool
 tmt_resize(TMT *vt, size_t nline, size_t ncol)
 {
-    if (nline < 2 || ncol < 2)
-        return false;
-
+    if (nline < 2 || ncol < 2) return false;
     if (nline < vt->screen.nline)
         freelines(vt, nline, vt->screen.nline - nline, false);
 
@@ -406,7 +405,7 @@ writecharatcurs(TMT *vt, wchar_t w)
     #ifdef TMT_HAS_WCWIDTH
     extern int wcwidth(wchar_t c);
     if (wcwidth(w) > 1)  w = TMT_INVALID_CHAR;
-    if (wcwidth(w) == 0) return;
+    if (wcwidth(w) < 0) return;
     #endif
 
     CLINE(vt)->chars[vt->curs.c].c = w;
@@ -496,5 +495,6 @@ tmt_reset(TMT *vt)
     vt->attrs = vt->oldattrs = defattrs;
     memset(&vt->ms, 0, sizeof(vt->ms));
     clearlines(vt, 0, vt->screen.nline);
+    CB(vt, TMT_MSG_CURSOR, "t");
     notify(vt, true, true);
 }

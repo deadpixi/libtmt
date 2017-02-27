@@ -497,7 +497,9 @@ ESC [ Ps Z              Go to previous tab stop
 ESC [ Ps b              Repeat previous character P1 times
 ESC [ Ps c              Callback with TMT_MSG_ANSWER "\033[?6c"
 ESC [ Ps g              If P1 == 3, clear all tabstops
+ESC [ Ps h              If P1 == 25, show the cursor (if it was hidden)
 ESC [ Ps m              Change graphical rendition state; see below
+ESC [ Ps l              If P1 == 25, hide the cursor
 ESC [ Ps n              If P1 == 6, callback with TMT_MSG_ANSWER "\033[%d;%dR"
                         with cursor row, column
 ESC [ Ps s              Alias for ESC 7

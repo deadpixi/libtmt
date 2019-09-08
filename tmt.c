@@ -257,6 +257,28 @@ HANDLER(fixcursor)
     c->c = MIN(c->c, s->ncol - 1);
 }
 
+HANDLER(sm)
+    switch (P0(0)){
+        case 25:
+            CB(vt, TMT_MSG_CURSOR, "t");
+            break;
+        default:
+            CB(vt, TMT_MSG_SETMODE, &vt->pars[0]);
+            break;
+    }
+}
+
+HANDLER(rm)
+    switch (P0(0)){
+        case 25:
+            CB(vt, TMT_MSG_CURSOR, "f");
+            break;
+        default:
+            CB(vt, TMT_MSG_UNSETMODE, &vt->pars[0]);
+            break;
+    }
+}
+
 HANDLER(title)
     vt->title[vt->ntitle] = 0;
     if (vt->npar >= 1)
@@ -322,9 +344,9 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "g",          if (P0(0) == 3) clearline(vt, vt->tabs, 0, s->ncol))
     DO(S_ARG, "m",          sgr(vt))
     DO(S_ARG, "n",          if (P0(0) == 6) dsr(vt))
-    DO(S_ARG, "h",          if (P0(0) == 25) CB(vt, TMT_MSG_CURSOR, "t"))
+    DO(S_ARG, "h",          sm(vt))
     DO(S_ARG, "i",          (void)0)
-    DO(S_ARG, "l",          if (P0(0) == 25) CB(vt, TMT_MSG_CURSOR, "f"))
+    DO(S_ARG, "l",          rm(vt))
     DO(S_ARG, "s",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
     DO(S_ARG, "u",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
     DO(S_TITLE, "\a",       title(vt))

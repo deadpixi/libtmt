@@ -122,7 +122,9 @@ typedef enum{
     TMT_MSG_ANSWER,
     TMT_MSG_TITLE,
     TMT_MSG_BELL,
-    TMT_MSG_CURSOR
+    TMT_MSG_CURSOR,
+    TMT_MSG_SETMODE,
+    TMT_MSG_UNSETMODE,
 } tmt_msg_t;
 
 typedef void (*TMTCALLBACK)(tmt_msg_t m, struct TMT *v, const void *r, void *p);

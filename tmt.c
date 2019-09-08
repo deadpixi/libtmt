@@ -228,7 +228,7 @@ HANDLER(rep)
 
 HANDLER(dsr)
     char r[BUF_MAX + 1] = {0};
-    snprintf(r, BUF_MAX, "\033[%zd;%zdR", c->r, c->c);
+    snprintf(r, BUF_MAX, "\033[%zd;%zdR", c->r + 1, c->c + 1);
     CB(vt, TMT_MSG_ANSWER, (const char *)r);
 }
 

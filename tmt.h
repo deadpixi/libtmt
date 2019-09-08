@@ -120,6 +120,7 @@ typedef enum{
     TMT_MSG_MOVED,
     TMT_MSG_UPDATE,
     TMT_MSG_ANSWER,
+    TMT_MSG_TITLE,
     TMT_MSG_BELL,
     TMT_MSG_CURSOR
 } tmt_msg_t;

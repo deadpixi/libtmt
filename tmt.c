@@ -33,6 +33,7 @@
 
 #define BUF_MAX 100
 #define PAR_MAX 8
+#define TITLE_MAX 128
 #define TAB 8
 #define MAX(x, y) (((size_t)(x) > (size_t)(y)) ? (size_t)(x) : (size_t)(y))
 #define MIN(x, y) (((size_t)(x) < (size_t)(y)) ? (size_t)(x) : (size_t)(y))
@@ -67,10 +68,13 @@ struct TMT{
     size_t nmb;
     char mb[BUF_MAX + 1];
 
+    char title[TITLE_MAX + 1];
+    size_t ntitle;
+
     size_t pars[PAR_MAX];   
     size_t npar;
     size_t arg;
-    enum {S_NUL, S_ESC, S_ARG} state;
+    enum {S_NUL, S_ESC, S_ARG, S_TITLE, S_TITLE_ARG} state;
 };
 
 static TMTATTRS defattrs = {.fg = TMT_COLOR_DEFAULT, .bg = TMT_COLOR_DEFAULT};
@@ -239,7 +243,7 @@ HANDLER(dsr)
 
 HANDLER(resetparser)
     memset(vt->pars, 0, sizeof(vt->pars));
-    vt->state = vt->npar = vt->arg = vt->ignored = (bool)0;
+    vt->ntitle = vt->state = vt->npar = vt->arg = vt->ignored = (bool)0;
 }
 
 HANDLER(consumearg)
@@ -251,6 +255,17 @@ HANDLER(consumearg)
 HANDLER(fixcursor)
     c->r = MIN(c->r, s->nline - 1);
     c->c = MIN(c->c, s->ncol - 1);
+}
+
+HANDLER(title)
+    vt->title[vt->ntitle] = 0;
+    if (vt->npar >= 1)
+    {
+      if (vt->pars[0] == 0 || vt->pars[0] == 2)
+      {
+        CB(vt, TMT_MSG_TITLE, vt->title);
+      }
+    }
 }
 
 static bool
@@ -276,10 +291,13 @@ handlechar(TMT *vt, char i)
     ON(S_ESC, "+*()",       vt->ignored = true; vt->state = S_ARG)
     DO(S_ESC, "c",          tmt_reset(vt))
     ON(S_ESC, "[",          vt->state = S_ARG)
+    ON(S_ESC, "]",          vt->state = S_TITLE_ARG)
     ON(S_ARG, "\x1b",       vt->state = S_ESC)
     ON(S_ARG, ";",          consumearg(vt))
     ON(S_ARG, "?",          (void)0)
     ON(S_ARG, "0123456789", vt->arg = vt->arg * 10 + atoi(cs))
+    ON(S_TITLE_ARG, "012",  vt->arg = vt->arg * 10 + atoi(cs))
+    ON(S_TITLE_ARG, ";",    consumearg(vt); vt->state = S_TITLE)
     DO(S_ARG, "A",          c->r = MAX(c->r - P1(0), 0))
     DO(S_ARG, "B",          c->r = MIN(c->r + P1(0), s->nline - 1))
     DO(S_ARG, "C",          c->c = MIN(c->c + P1(0), s->ncol - 1))
@@ -309,7 +327,18 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "l",          if (P0(0) == 25) CB(vt, TMT_MSG_CURSOR, "f"))
     DO(S_ARG, "s",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
     DO(S_ARG, "u",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
+    DO(S_TITLE, "\a",       title(vt))
     DO(S_ARG, "@",          ich(vt))
+
+    if (vt->state == S_TITLE)
+    {
+      if ( (i >= 32) && (vt->ntitle < TITLE_MAX) )
+      {
+        vt->title[vt->ntitle] = i;
+        vt->ntitle += 1;
+        return true;
+      }
+    }
 
     return resetparser(vt), false;
 }

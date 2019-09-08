@@ -181,11 +181,16 @@ HANDLER(ich)
 HANDLER(dch)
     size_t n = P1(0); /* XXX use MAX */
     if (n > s->ncol - c->c) n = s->ncol - c->c;
+    else if (n == 0) return;
 
     memmove(l->chars + c->c, l->chars + c->c + n,
             (s->ncol - c->c - n) * sizeof(TMTCHAR));
 
-    clearline(vt, l, s->ncol - c->c - n, s->ncol);
+    clearline(vt, l, s->ncol - n, s->ncol);
+    /* VT102 manual says the attribute for the newly empty characters
+     * should be the same as the last character moved left, which isn't
+     * what clearline() currently does.
+     */
 }
 
 HANDLER(el)

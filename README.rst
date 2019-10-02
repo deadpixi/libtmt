@@ -41,7 +41,7 @@ Small
 
 Free
     Released under a BSD-style license, free for commercial and
-    non-commerical use, with no restrictions on source code release or
+    non-commercial use, with no restrictions on source code release or
     redistribution.
 
 Simple
@@ -152,6 +152,17 @@ Note that another good example is the `mtm`_ terminal multiplexer:
                 /* the cursor moved; a is a pointer to the cursor's TMTPOINT */
                 printf("cursor is now at %zd,%zd\n", c->r, c->c);
                 break;
+
+            case TMT_MSG_CURSOR:
+                /* the cursor's visibility changed; a is a pointer to a string
+                 * containing "t" if the cursor should be visible, "f"
+                 * otherwise. */
+                if (((const char *)a)[0] == 't'){
+                    printf("display cursor\n");
+                } else{
+                    printf("hide cursor\n");
+                }
+                break;
         }
     }
 
@@ -168,7 +179,8 @@ Data Types and Enumerations
         TMT_MSG_MOVED,  /* the cursor changed position       */
         TMT_MSG_UPDATE, /* the screen image changed          */
         TMT_MSG_ANSWER, /* the terminal responded to a query */
-        TMT_MSG_BELL    /* the terminal bell was rung        */
+        TMT_MSG_BELL,   /* the terminal bell was rung        */
+        TMT_MSG_CURSOR  /* the cursor visibility changed     */
     } tmt_msg_T;
 
     /* a callback for the library
@@ -178,6 +190,7 @@ Data Types and Enumerations
      *   is a pointer to the cursor's TMTPOINT for TMT_MSG_MOVED
      *   is a pointer to the terminal's TMTSCREEN for TMT_MSG_UPDATE
      *   is a pointer to a string for TMT_MSG_ANSWER
+     *   is a pointer to a string containing "t" or "f" for TMT_MSG_CURSOR
      * p is whatever was passed to tmt_open (see below).
      */
     typedef void (*TMTCALLBACK)(tmt_msg_t m, struct TMT *vt,
@@ -229,7 +242,7 @@ Data Types and Enumerations
     typedef struct TMTLINE TMTLINE;
     struct TMTLINE{
         bool dirty;     /* line has changed since it was last drawn */
-        TMTCHAR chars;  /* the contents of the line                 */
+        TMTCHAR chars[];  /* the contents of the line                 */
     };
 
     /* a virtual terminal screen image */
@@ -277,7 +290,7 @@ Functions
 
 `void tmt_write(TMT *vt, const char *s, size_t n);`
     Write the provided string to the terminal, interpreting any escape
-    sequences contained threin, and update the screen image. The last
+    sequences contained therein, and update the screen image. The last
     argument is the length of the input. If set to 0, the length is
     determined using `strlen`.
 
@@ -286,14 +299,14 @@ Functions
 
     The string is converted internally to a wide-character string using the
     system's current multibyte encoding. Each terminal maintains a private
-    multibyte decoding state, and correctly handles mulitbyte characters that
+    multibyte decoding state, and correctly handles multibyte characters that
     span multiple calls to this function (that is, the final byte(s) of `s`
-    may be a partial mulitbyte character to be completed on the next call).
+    may be a partial multibyte character to be completed on the next call).
 
 `const TMTSCREEN *tmt_screen(const TMT *vt);`
     Returns a pointer to the terminal's screen image.
 
-`const TMTPOINT *tmt_cursor(cosnt TMT *vt);`
+`const TMTPOINT *tmt_cursor(const TMT *vt);`
     Returns a pointer to the terminal's cursor position.
 
 `void tmt_clean(TMT *vt);`

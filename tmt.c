@@ -352,6 +352,7 @@ tmt_open(size_t nline, size_t ncol, TMTCALLBACK cb, void *p,
     vt->acschars = acs? acs : L"><^v#+:o##+++++~---_++++|<>*!fo";
     vt->cb = cb;
     vt->p = p;
+    vt->attrs = vt->oldattrs = defattrs;
 
     if (!tmt_resize(vt, nline, ncol)) return tmt_close(vt), NULL;
     return vt;

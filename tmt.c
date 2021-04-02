@@ -297,7 +297,7 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "P",          dch(vt))
     DO(S_ARG, "S",          scrup(vt, 0, P1(0)))
     DO(S_ARG, "T",          scrdn(vt, 0, P1(0)))
-    DO(S_ARG, "X",          clearline(vt, l, c->c, P1(0)))
+    DO(S_ARG, "X",          clearline(vt, l, c->c, P1(0) + c->c))
     DO(S_ARG, "Z",          while (c->c && t[--c->c].c != L'*'))
     DO(S_ARG, "b",          rep(vt));
     DO(S_ARG, "c",          CB(vt, TMT_MSG_ANSWER, "\033[?6c"))

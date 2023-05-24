@@ -181,7 +181,7 @@ HANDLER(ed)
 
     switch (P0(0)){
         case 0: b = c->r + 1; clearline(vt, l, c->c, vt->screen.ncol); break;
-        case 1: e = c->r - 1; clearline(vt, l, 0, c->c);               break;
+        case 1: e = c->r    ; clearline(vt, l, 0, c->c);               break;
         case 2:  /* use defaults */                                    break;
         default: /* do nothing   */                                    return;
     }

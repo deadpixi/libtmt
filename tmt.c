@@ -263,6 +263,8 @@ HANDLER(sm)
             CB(vt, TMT_MSG_CURSOR, "t");
             break;
         default:
+            for (int i = vt->npar; i < PAR_MAX; ++i)
+                vt->pars[i] = (size_t)-1;
             CB(vt, TMT_MSG_SETMODE, &vt->pars[0]);
             break;
     }
@@ -274,6 +276,8 @@ HANDLER(rm)
             CB(vt, TMT_MSG_CURSOR, "f");
             break;
         default:
+            for (int i = vt->npar; i < PAR_MAX; ++i)
+                vt->pars[i] = (size_t)-1;
             CB(vt, TMT_MSG_UNSETMODE, &vt->pars[0]);
             break;
     }

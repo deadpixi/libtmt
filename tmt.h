@@ -132,6 +132,7 @@ typedef void (*TMTCALLBACK)(tmt_msg_t m, struct TMT *v, const void *r, void *p);
 /**** PUBLIC FUNCTIONS */
 TMT *tmt_open(size_t nline, size_t ncol, TMTCALLBACK cb, void *p,
               const wchar_t *acs);
+bool tmt_set_unicode_decode(TMT *vt, bool v);
 void tmt_close(TMT *vt);
 bool tmt_resize(TMT *vt, size_t nline, size_t ncol);
 void tmt_write(TMT *vt, const char *s, size_t n);

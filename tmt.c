@@ -70,6 +70,8 @@ struct TMT{
     int charset;  // Are we in G0 or G1?
     int xlate[2]; // What's in the charset?  0=ASCII, 1=DEC Special Graphics
 
+    bool decode_unicode; // Try to decode characters to ACS equivalents?
+
     mbstate_t ms;
     size_t nmb;
     char mb[BUF_MAX + 1];
@@ -85,6 +87,14 @@ struct TMT{
 
 static TMTATTRS defattrs = {.fg = TMT_COLOR_DEFAULT, .bg = TMT_COLOR_DEFAULT};
 static void writecharatcurs(TMT *vt, wchar_t w);
+
+bool
+tmt_set_unicode_decode(TMT *vt, bool v)
+{
+    bool r = vt->decode_unicode;
+    vt->decode_unicode = v;
+    return r;
+}
 
 static wchar_t
 tacs(const TMT *vt, unsigned char c)
@@ -516,6 +526,55 @@ static void
 writecharatcurs(TMT *vt, wchar_t w)
 {
     COMMON_VARS;
+
+    if (vt->decode_unicode)
+    {
+	// We can add more mappings here, but the initial set here comes from:
+	// justsolve.archiveteam.org/wiki/DEC_Special_Graphics_Character_Set
+	// See also codepage.c from qodem.
+	switch (w)
+	{
+	case 0x2192: w = vt->acschars[0]; break; // RIGHT ARROW
+	case 0x2190: w = vt->acschars[1]; break; // LEFT ARROW
+	case 0x2191: w = vt->acschars[2]; break; // UP ARROW
+	case 0x2193: w = vt->acschars[3]; break; // DOWN ARROW
+	case 0x2588: w = vt->acschars[4]; break; // BLOCK
+	case 0x25A6: w = vt->acschars[9]; break; // BOARD
+        case 0x00A0: w = dec_to_acs(vt, 0x5f); break; // NBSP
+        case 0x2666: // BLACK DIAMOND SUIT
+        case 0x25C6: w = dec_to_acs(vt, 0x60); break; // BLACK DIAMOND
+        case 0x2592: w = dec_to_acs(vt, 0x61); break; // MEDIUM SHADE
+        case 0x2409: w = dec_to_acs(vt, 0x62); break; // SYMBOL FOR HORIZONTAL TABULATION
+        case 0x240C: w = dec_to_acs(vt, 0x63); break; // SYMBOL FOR FORM FEED
+        case 0x240D: w = dec_to_acs(vt, 0x64); break; // SYMBOL FOR CARRIAGE RETURN
+        case 0x240A: w = dec_to_acs(vt, 0x65); break; // SYMBOL FOR LINE FEED
+        case 0x00B0: w = dec_to_acs(vt, 0x66); break; // DEGREE SIGN
+        case 0x00B1: w = dec_to_acs(vt, 0x67); break; // PLUS-MINUS SIGN
+        case 0x2424: w = dec_to_acs(vt, 0x68); break; // SYMBOL FOR NEWLINE
+        case 0x240B: w = dec_to_acs(vt, 0x69); break; // SYMBOL FOR VERTICAL TABULATION
+        case 0x2518: w = dec_to_acs(vt, 0x6a); break; // BOX DRAWINGS LIGHT UP AND LEFT
+        case 0x2510: w = dec_to_acs(vt, 0x6b); break; // BOX DRAWINGS LIGHT DOWN AND LEFT
+        case 0x250C: w = dec_to_acs(vt, 0x6c); break; // BOX DRAWINGS LIGHT DOWN AND RIGHT
+        case 0x2514: w = dec_to_acs(vt, 0x6d); break; // BOX DRAWINGS LIGHT UP AND RIGHT
+        case 0x253C: w = dec_to_acs(vt, 0x6e); break; // BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL
+        case 0x23BA: w = dec_to_acs(vt, 0x6f); break; // HORIZONTAL SCAN LINE-1
+        case 0x23BB: w = dec_to_acs(vt, 0x70); break; // HORIZONTAL SCAN LINE-3
+        case 0x2500: w = dec_to_acs(vt, 0x71); break; // BOX DRAWINGS LIGHT HORIZONTAL
+        case 0x23BC: w = dec_to_acs(vt, 0x72); break; // HORIZONTAL SCAN LINE-7
+        case 0x23BD: w = dec_to_acs(vt, 0x73); break; // HORIZONTAL SCAN LINE-9
+        case 0x251C: w = dec_to_acs(vt, 0x74); break; // BOX DRAWINGS LIGHT VERTICAL AND RIGHT
+        case 0x2524: w = dec_to_acs(vt, 0x75); break; // BOX DRAWINGS LIGHT VERTICAL AND LEFT
+        case 0x2534: w = dec_to_acs(vt, 0x76); break; // BOX DRAWINGS LIGHT UP AND HORIZONTAL
+        case 0x252C: w = dec_to_acs(vt, 0x77); break; // BOX DRAWINGS LIGHT DOWN AND HORIZONTAL
+        case 0x2502: w = dec_to_acs(vt, 0x78); break; // BOX DRAWINGS LIGHT VERTICAL
+        case 0x2264: w = dec_to_acs(vt, 0x79); break; // LESS-THAN OR EQUAL TO
+        case 0x2265: w = dec_to_acs(vt, 0x7a); break; // GREATER-THAN OR EQUAL TO
+        case 0x03C0: w = dec_to_acs(vt, 0x7b); break; // GREEK SMALL LETTER PI
+        case 0x2260: w = dec_to_acs(vt, 0x7c); break; // NOT EQUAL TO
+        case 0x00A3: w = dec_to_acs(vt, 0x7d); break; // POUND SIGN
+        case 0x00B7: w = dec_to_acs(vt, 0x7e); break; // MIDDLE DOT
+	}
+    }
 
     if (vt->xlate[vt->charset])
 	w = dec_to_acs(vt, w);

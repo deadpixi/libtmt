@@ -39,6 +39,8 @@
 #define MIN(x, y) (((size_t)(x) < (size_t)(y)) ? (size_t)(x) : (size_t)(y))
 #define CLINE(vt) (vt)->screen.lines[MIN((vt)->curs.r, (vt)->screen.nline - 1)]
 
+#define SCR_DEF ((size_t)-1)
+
 #define P0(x) (vt->pars[x])
 #define P1(x) (vt->pars[x]? vt->pars[x] : 1)
 #define CB(vt, m, a) ((vt)->cb? (vt)->cb(m, vt, a, (vt)->p) : (void)0)
@@ -56,8 +58,34 @@ struct TMT{
     TMTPOINT curs, oldcurs;
     TMTATTRS attrs, oldattrs;
 
+    // VT100-derived terminals have a wrap behavior where the cursor "sticks"
+    // at the end of a line instead of immediately wrapping.  This allows you
+    // to use the last column without getting extra blank lines or
+    // unintentionally scrolling the screen.  The logic we implement for it
+    // is not exactly like that of a real VT100, but it seems to be
+    // sufficient for things to work as expected in the use cases and with
+    // the terminfo files I've tested with.  Specifically, I call the case
+    // where the cursor has advanced exactly one position past the rightmost
+    // column "hanging".  A rough description of the current algorithm is
+    // that there are two cases which each have two sub-cases:
+    // 1. You're hanging onto the next line below.  That is, you're not at
+    //    the bottom of the screen/scrolling region.
+    //    1a. If you receive a newline, hanging mode is canceled and nothing
+    //        else happens.  In particular, you do *not* advanced to the next
+    //        line.  You're already *at* the start of the "next" line.
+    //    2b. If you receive a printable character, just cancel hanging mode.
+    // 2. You're hanging past the bottom of the screen/scrolling region.
+    //    2a. If you receive a newline or printable character, scroll the
+    //        screen up one line and cancel hanging.
+    //    2b. If you receive a cursor reposition or whatever, cancel hanging.
+    // Below, hang is 0 if not hanging, or 1 or 2 as described above.
+    int hang;
+
     // Name of the terminal for XTVERSION (if null, use default).
     char * terminal_name;
+
+    size_t minline;
+    size_t maxline;
 
     bool dirty, acs, ignored;
     TMTSCREEN screen;
@@ -138,40 +166,42 @@ clearlines(TMT *vt, size_t r, size_t n)
 }
 
 static void
-scrup(TMT *vt, size_t r, size_t n)
+scrup(TMT *vt, size_t r, ssize_t n)
 {
-    n = MIN(n, vt->screen.nline - 1 - r);
+    if (r == SCR_DEF) r = vt->minline;
+    n = MIN(n, vt->maxline - r);
 
-    if (n){
+    if (n>0){
         TMTLINE *buf[n];
 
         memcpy(buf, vt->screen.lines + r, n * sizeof(TMTLINE *));
         memmove(vt->screen.lines + r, vt->screen.lines + r + n,
-                (vt->screen.nline - n - r) * sizeof(TMTLINE *));
-        memcpy(vt->screen.lines + (vt->screen.nline - n),
+                (vt->maxline - n - r + 1) * sizeof(TMTLINE *));
+        memcpy(vt->screen.lines + (vt->maxline - n + 1),
                buf, n * sizeof(TMTLINE *));
 
-        clearlines(vt, vt->screen.nline - n, n);
-        dirtylines(vt, r, vt->screen.nline);
+        clearlines(vt, vt->maxline - n + 1, n);
+        dirtylines(vt, r, vt->maxline+1);
     }
 }
 
 static void
-scrdn(TMT *vt, size_t r, size_t n)
+scrdn(TMT *vt, size_t r, ssize_t n)
 {
-    n = MIN(n, vt->screen.nline - 1 - r);
+    if (r == SCR_DEF) r = vt->minline;
+    n = MIN(n, vt->maxline - r);
 
-    if (n){
+    if (n>0){
         TMTLINE *buf[n];
 
-        memcpy(buf, vt->screen.lines + (vt->screen.nline - n),
+        memcpy(buf, vt->screen.lines + (vt->maxline - n + 1),
                n * sizeof(TMTLINE *));
         memmove(vt->screen.lines + r + n, vt->screen.lines + r,
-                (vt->screen.nline - n - r) * sizeof(TMTLINE *));
+                (vt->maxline - n - r + 1) * sizeof(TMTLINE *));
         memcpy(vt->screen.lines + r, buf, n * sizeof(TMTLINE *));
 
         clearlines(vt, r, n);
-        dirtylines(vt, r, vt->screen.nline);
+        dirtylines(vt, r, vt->maxline+1);
     }
 }
 
@@ -316,6 +346,47 @@ HANDLER(title)
 }
 
 static void
+nl(TMT *vt)
+{
+    COMMON_VARS;
+
+    if (vt->hang)
+    {
+        if (vt->hang == 2)
+            scrup(vt, SCR_DEF, 1);
+        vt->hang = 0;
+        return;
+    }
+
+    if (c->r == vt->maxline)
+        scrup(vt, SCR_DEF, 1);
+    else if (c->r < (s->nline-1))
+        c->r++;
+}
+
+static void
+cr(TMT *vt)
+{
+    COMMON_VARS;
+    c->c = 0;
+    if (vt->hang==1)
+    {
+        vt->hang = 0;
+        if (c->r > vt->minline && c->r <= vt->maxline)
+            c->r--;
+    }
+}
+
+static void
+margin(TMT *vt, size_t top, size_t bot)
+{
+    if (top >= bot) return;
+    if (bot >= vt->screen.nline) return;
+    vt->minline = top;
+    vt->maxline = bot;
+}
+
+static void
 xtversion(TMT *vt)
 {
     char * name = "tmt(0.0.0)";
@@ -347,8 +418,8 @@ handlechar(TMT *vt, char i)
     DO(S_NUL, "\x07",       CB(vt, TMT_MSG_BELL, NULL))
     DO(S_NUL, "\x08",       if (c->c) c->c--)
     DO(S_NUL, "\x09",       while (++c->c < s->ncol - 1 && t[c->c].c != L'*'))
-    DO(S_NUL, "\x0a",       c->r < s->nline - 1? (void)c->r++ : scrup(vt, 0, 1))
-    DO(S_NUL, "\x0d",       c->c = 0)
+    DO(S_NUL, "\x0a",       nl(vt))
+    DO(S_NUL, "\x0d",       cr(vt))
     DO(S_NUL, "\x0e",       vt->charset = 1) // Shift Out (Switch to G1)
     DO(S_NUL, "\x0f",       vt->charset = 0) // Shift In  (Switch to G0)
     ON(S_NUL, "\x1b",       vt->state = S_ESC)
@@ -376,6 +447,7 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "F",          c->c = 0; c->r = MAX(c->r - P1(0), 0))
     DO(S_ARG, "G",          c->c = MIN(P1(0) - 1, s->ncol - 1))
     DO(S_ARG, "d",          c->r = MIN(P1(0) - 1, s->nline - 1))
+    DO(S_ARG, "r",          margin(vt, P1(0)-1, P1(1)-1))
     DO(S_ARG, "Hf",         c->r = P1(0) - 1; c->c = P1(1) - 1)
     DO(S_ARG, "I",          while (++c->c < s->ncol - 1 && t[c->c].c != L'*'))
     DO(S_ARG, "J",          ed(vt))
@@ -383,9 +455,9 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "L",          scrdn(vt, c->r, P1(0)))
     DO(S_ARG, "M",          scrup(vt, c->r, P1(0)))
     DO(S_ARG, "P",          dch(vt))
-    DO(S_ARG, "S",          scrup(vt, 0, P1(0)))
-    DO(S_ARG, "T",          scrdn(vt, 0, P1(0)))
-    DO(S_ARG, "X",          clearline(vt, l, c->c, P1(0)))
+    DO(S_ARG, "S",          scrup(vt, SCR_DEF, P1(0)))
+    DO(S_ARG, "T",          scrdn(vt, SCR_DEF, P1(0)))
+    DO(S_ARG, "X",          clearline(vt, l, c->c, c->c+P1(0)))
     DO(S_ARG, "Z",          while (c->c && t[--c->c].c != L'*'))
     DO(S_ARG, "b",          rep(vt));
     DO(S_ARG, "c",          if (!vt->q) CB(vt, TMT_MSG_ANSWER, "\033[?6c"))
@@ -498,6 +570,11 @@ tmt_resize(TMT *vt, size_t nline, size_t ncol)
     }
     vt->screen.nline = nline;
 
+    // We reset this.  Maybe we're supposed to maintain it?  Hopefully
+    // anything that needs it will reset it in response to SIGWNCH?
+    vt->minline = 0;
+    vt->maxline = nline-1;
+
     vt->tabs = allocline(vt, vt->tabs, ncol, 0);
     if (!vt->tabs) return free(l), false;
     vt->tabs->chars[0].c = vt->tabs->chars[ncol - 1].c = L'*';
@@ -533,6 +610,10 @@ static void
 writecharatcurs(TMT *vt, wchar_t w)
 {
     COMMON_VARS;
+
+    if (vt->hang == 2)
+        scrup(vt, SCR_DEF, 1);
+    vt->hang = 0;
 
     if (vt->decode_unicode)
     {
@@ -599,13 +680,15 @@ writecharatcurs(TMT *vt, wchar_t w)
     if (c->c < s->ncol - 1)
         c->c++;
     else{
+        vt->hang = 1;
         c->c = 0;
         c->r++;
     }
 
-    if (c->r >= s->nline){
-        c->r = s->nline - 1;
-        scrup(vt, 0, 1);
+    if (vt->hang && c->r > vt->maxline){
+        c->r = vt->maxline;
+        if (vt->hang)
+            vt->hang = 2;
     }
 }
 
@@ -633,7 +716,7 @@ tmt_write(TMT *vt, const char *s, size_t n)
 
     for (size_t p = 0; p < n; p++){
         if (handlechar(vt, s[p]))
-            continue;
+            vt->hang = 0;
         else if (vt->acs)
             writecharatcurs(vt, tacs(vt, (unsigned char)s[p]));
         else if (vt->nmb >= BUF_MAX)
@@ -674,7 +757,7 @@ tmt_clean(TMT *vt)
 void
 tmt_reset(TMT *vt)
 {
-    vt->curs.r = vt->curs.c = vt->oldcurs.r = vt->oldcurs.c = vt->acs = (bool)0;
+    memset(vt, 0, sizeof(vt));
     resetparser(vt);
     vt->attrs = vt->oldattrs = defattrs;
     memset(&vt->ms, 0, sizeof(vt->ms));

@@ -82,6 +82,7 @@ struct TMT{
     size_t pars[PAR_MAX];
     size_t npar;
     size_t arg;
+    bool q;
     enum {S_NUL, S_ESC, S_ARG, S_TITLE, S_TITLE_ARG, S_GT_ARG, S_LPAREN, S_RPAREN} state;
 };
 
@@ -259,7 +260,7 @@ HANDLER(dsr)
 
 HANDLER(resetparser)
     memset(vt->pars, 0, sizeof(vt->pars));
-    vt->ntitle = vt->state = vt->npar = vt->arg = vt->ignored = (bool)0;
+    vt->q = vt->ntitle = vt->state = vt->npar = vt->arg = vt->ignored = (bool)0;
 }
 
 HANDLER(consumearg)
@@ -357,7 +358,7 @@ handlechar(TMT *vt, char i)
     ON(S_ESC, "]",          vt->state = S_TITLE_ARG)
     ON(S_ARG, "\x1b",       vt->state = S_ESC)
     ON(S_ARG, ";",          consumearg(vt))
-    ON(S_ARG, "?",          (void)0)
+    ON(S_ARG, "?",          vt->q = 1)
     ON(S_ARG, "0123456789", vt->arg = vt->arg * 10 + atoi(cs))
     ON(S_TITLE_ARG, "012",  vt->arg = vt->arg * 10 + atoi(cs))
     ON(S_TITLE_ARG, ";",    consumearg(vt); vt->state = S_TITLE)
@@ -381,13 +382,13 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "X",          clearline(vt, l, c->c, P1(0)))
     DO(S_ARG, "Z",          while (c->c && t[--c->c].c != L'*'))
     DO(S_ARG, "b",          rep(vt));
-    DO(S_ARG, "c",          CB(vt, TMT_MSG_ANSWER, "\033[?6c"))
+    DO(S_ARG, "c",          if (!vt->q) CB(vt, TMT_MSG_ANSWER, "\033[?6c"))
     DO(S_ARG, "g",          if (P0(0) == 3) clearline(vt, vt->tabs, 0, s->ncol))
     DO(S_ARG, "m",          sgr(vt))
     DO(S_ARG, "n",          if (P0(0) == 6) dsr(vt))
-    DO(S_ARG, "h",          sm(vt))
+    DO(S_ARG, "h",          sm(vt)) // Handles both ?h and plain h
+    DO(S_ARG, "l",          rm(vt)) // Handles both ?l and plain l
     DO(S_ARG, "i",          (void)0)
-    DO(S_ARG, "l",          rm(vt))
     DO(S_ARG, "s",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
     DO(S_ARG, "u",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
     ON(S_ARG, ">",          vt->state = S_GT_ARG)

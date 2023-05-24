@@ -226,13 +226,13 @@ HANDLER(sgr)
     #define FGBG(c) *(P0(i) < 40? &vt->attrs.fg : &vt->attrs.bg) = c
     for (size_t i = 0; i < vt->npar; i++) switch (P0(i)){
         case  0: vt->attrs                    = defattrs;   break;
-        case  1: case 22: vt->attrs.bold      = P0(0) < 20; break;
-        case  2: case 23: vt->attrs.dim       = P0(0) < 20; break;
-        case  4: case 24: vt->attrs.underline = P0(0) < 20; break;
-        case  5: case 25: vt->attrs.blink     = P0(0) < 20; break;
-        case  7: case 27: vt->attrs.reverse   = P0(0) < 20; break;
-        case  8: case 28: vt->attrs.invisible = P0(0) < 20; break;
-        case 10: case 11: vt->acs             = P0(0) > 10; break;
+        case  1: case 22: vt->attrs.bold      = P0(i) < 20; break;
+        case  2: case 23: vt->attrs.dim       = P0(i) < 20; break;
+        case  4: case 24: vt->attrs.underline = P0(i) < 20; break;
+        case  5: case 25: vt->attrs.blink     = P0(i) < 20; break;
+        case  7: case 27: vt->attrs.reverse   = P0(i) < 20; break;
+        case  8: case 28: vt->attrs.invisible = P0(i) < 20; break;
+        case 10: case 11: vt->acs             = P0(i) > 10; break;
         case 30: case 40: FGBG(TMT_COLOR_BLACK);            break;
         case 31: case 41: FGBG(TMT_COLOR_RED);              break;
         case 32: case 42: FGBG(TMT_COLOR_GREEN);            break;

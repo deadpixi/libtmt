@@ -42,24 +42,27 @@
 #define TMT_KEY_DOWN           "\033[B"
 #define TMT_KEY_RIGHT          "\033[C"
 #define TMT_KEY_LEFT           "\033[D"
-#define TMT_KEY_HOME           "\033[H"
-#define TMT_KEY_END            "\033[Y"
+#define TMT_KEY_HOME           "\033[1~"
+#define TMT_KEY_END            "\033[4~"
 #define TMT_KEY_INSERT         "\033[L"
-#define TMT_KEY_BACKSPACE      "\x08"
+#define TMT_KEY_BACKSPACE      "\x7f"
+#define TMT_KEY_DELETE         "\033[3~"
 #define TMT_KEY_ESCAPE         "\x1b"
-#define TMT_KEY_BACK_TAB       "\033[Z"
-#define TMT_KEY_PAGE_UP        "\033[V"
-#define TMT_KEY_PAGE_DOWN      "\033[U"
-#define TMT_KEY_F1             "\033OP"
-#define TMT_KEY_F2             "\033OQ"
-#define TMT_KEY_F3             "\033OR"
-#define TMT_KEY_F4             "\033OS"
-#define TMT_KEY_F5             "\033OT"
-#define TMT_KEY_F6             "\033OU"
-#define TMT_KEY_F7             "\033OV"
-#define TMT_KEY_F8             "\033OW"
-#define TMT_KEY_F9             "\033OX"
-#define TMT_KEY_F10            "\033OY"
+#define TMT_KEY_BACK_TAB       "\033\x09"
+#define TMT_KEY_PAGE_UP        "\033[5~"
+#define TMT_KEY_PAGE_DOWN      "\033[6~"
+#define TMT_KEY_F1             "\033[[A"
+#define TMT_KEY_F2             "\033[[B"
+#define TMT_KEY_F3             "\033[[C"
+#define TMT_KEY_F4             "\033[[D"
+#define TMT_KEY_F5             "\033[[E"
+#define TMT_KEY_F6             "\033[17~"
+#define TMT_KEY_F7             "\033[18~"
+#define TMT_KEY_F8             "\033[19~"
+#define TMT_KEY_F9             "\033[20~"
+#define TMT_KEY_F10            "\033[21~"
+#define TMT_KEY_F11            "\033[23~"
+#define TMT_KEY_F12            "\033[24~"
 
 /**** BASIC DATA STRUCTURES */
 typedef struct TMT TMT;
@@ -120,8 +123,11 @@ typedef enum{
     TMT_MSG_MOVED,
     TMT_MSG_UPDATE,
     TMT_MSG_ANSWER,
+    TMT_MSG_TITLE,
     TMT_MSG_BELL,
-    TMT_MSG_CURSOR
+    TMT_MSG_CURSOR,
+    TMT_MSG_SETMODE,
+    TMT_MSG_UNSETMODE,
 } tmt_msg_t;
 
 typedef void (*TMTCALLBACK)(tmt_msg_t m, struct TMT *v, const void *r, void *p);
@@ -129,6 +135,7 @@ typedef void (*TMTCALLBACK)(tmt_msg_t m, struct TMT *v, const void *r, void *p);
 /**** PUBLIC FUNCTIONS */
 TMT *tmt_open(size_t nline, size_t ncol, TMTCALLBACK cb, void *p,
               const wchar_t *acs);
+bool tmt_set_unicode_decode(TMT *vt, bool v);
 void tmt_close(TMT *vt);
 bool tmt_resize(TMT *vt, size_t nline, size_t ncol);
 void tmt_write(TMT *vt, const char *s, size_t n);

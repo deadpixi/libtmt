@@ -67,6 +67,9 @@ struct TMT{
     void *p;
     const wchar_t *acschars;
 
+    int charset;  // Are we in G0 or G1?
+    int xlate[2]; // What's in the charset?  0=ASCII, 1=DEC Special Graphics
+
     mbstate_t ms;
     size_t nmb;
     char mb[BUF_MAX + 1];
@@ -77,7 +80,7 @@ struct TMT{
     size_t pars[PAR_MAX];   
     size_t npar;
     size_t arg;
-    enum {S_NUL, S_ESC, S_ARG, S_TITLE, S_TITLE_ARG, S_GT_ARG} state;
+    enum {S_NUL, S_ESC, S_ARG, S_TITLE, S_TITLE_ARG, S_GT_ARG, S_LPAREN, S_RPAREN} state;
 };
 
 static TMTATTRS defattrs = {.fg = TMT_COLOR_DEFAULT, .bg = TMT_COLOR_DEFAULT};
@@ -331,12 +334,14 @@ handlechar(TMT *vt, char i)
     DO(S_NUL, "\x09",       while (++c->c < s->ncol - 1 && t[c->c].c != L'*'))
     DO(S_NUL, "\x0a",       c->r < s->nline - 1? (void)c->r++ : scrup(vt, 0, 1))
     DO(S_NUL, "\x0d",       c->c = 0)
+    DO(S_NUL, "\x0e",       vt->charset = 1) // Shift Out (Switch to G1)
+    DO(S_NUL, "\x0f",       vt->charset = 0) // Shift In  (Switch to G0)
     ON(S_NUL, "\x1b",       vt->state = S_ESC)
     ON(S_ESC, "\x1b",       vt->state = S_ESC)
     DO(S_ESC, "H",          t[c->c].c = L'*')
     DO(S_ESC, "7",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
     DO(S_ESC, "8",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
-    ON(S_ESC, "+*()",       vt->ignored = true; vt->state = S_ARG)
+    ON(S_ESC, "+*",         vt->ignored = true; vt->state = S_ARG)
     DO(S_ESC, "c",          tmt_reset(vt))
     ON(S_ESC, "[",          vt->state = S_ARG)
     ON(S_ESC, "]",          vt->state = S_TITLE_ARG)
@@ -380,6 +385,12 @@ handlechar(TMT *vt, char i)
     DO(S_GT_ARG, "q",       xtversion(vt))
     DO(S_TITLE, "\a",       title(vt))
     DO(S_ARG, "@",          ich(vt))
+    ON(S_ESC, "(",          vt->state = S_LPAREN)
+    ON(S_ESC, ")",          vt->state = S_RPAREN)
+    DO(S_LPAREN, "AB12",    vt->xlate[0] = 0)
+    DO(S_LPAREN, "0",       vt->xlate[0] = 1)
+    DO(S_RPAREN, "AB12",    vt->xlate[1] = 0)
+    DO(S_RPAREN, "0",       vt->xlate[1] = 1)
 
     if (vt->state == S_TITLE)
     {
@@ -482,10 +493,32 @@ tmt_resize(TMT *vt, size_t nline, size_t ncol)
     return true;
 }
 
+static wchar_t
+dec_to_acs(TMT *vt, wchar_t w)
+{
+    // Translates from DEC Special Graphics to our ACS characters.
+
+    // The capital letters are supposed to be symbols for control chars.
+    // Specifically: Tab FormFeed CR LF NL VTab
+    // 0xfa is hopefully an interpunct.
+
+    /**/ if (w == '_'            ) w = ' '; // NBSP
+    else if (w >= '`' && w <= 'a') w = vt->acschars[w - '`' +  5];
+    else if (w >= 'b' && w <= 'e') w = "TFCL"[w - 'b'];
+    else if (w >= 'f' && w <= 'g') w = vt->acschars[w - 'f' +  7];
+    else if (w >= 'h' && w <= 'i') w = "NV"[w - 'h'];
+    else if (w >= 'j' && w <= '~') w = vt->acschars[w - 'j' + 10];
+
+    return w;
+}
+
 static void
 writecharatcurs(TMT *vt, wchar_t w)
 {
     COMMON_VARS;
+
+    if (vt->xlate[vt->charset])
+	w = dec_to_acs(vt, w);
 
     #ifdef TMT_HAS_WCWIDTH
     extern int wcwidth(wchar_t c);

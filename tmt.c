@@ -204,10 +204,14 @@ HANDLER(dch)
     if (n > s->ncol - c->c) n = s->ncol - c->c;
     else if (n == 0) return;
 
+    TMTATTRS oldattr = vt->attrs;
+    vt->attrs = (l->chars + s->ncol - n)->a;
+
     memmove(l->chars + c->c, l->chars + c->c + n,
             (s->ncol - c->c - n) * sizeof(TMTCHAR));
 
     clearline(vt, l, s->ncol - n, s->ncol);
+    vt->attrs = oldattr;
     /* VT102 manual says the attribute for the newly empty characters
      * should be the same as the last character moved left, which isn't
      * what clearline() currently does.

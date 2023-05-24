@@ -46,6 +46,7 @@
 #define TMT_KEY_END            "\033[4~"
 #define TMT_KEY_INSERT         "\033[L"
 #define TMT_KEY_BACKSPACE      "\x7f"
+#define TMT_KEY_DELETE         "\033[3~"
 #define TMT_KEY_ESCAPE         "\x1b"
 #define TMT_KEY_BACK_TAB       "\033\x09"
 #define TMT_KEY_PAGE_UP        "\033[5~"
@@ -60,6 +61,8 @@
 #define TMT_KEY_F8             "\033[19~"
 #define TMT_KEY_F9             "\033[20~"
 #define TMT_KEY_F10            "\033[21~"
+#define TMT_KEY_F11            "\033[23~"
+#define TMT_KEY_F12            "\033[24~"
 
 /**** BASIC DATA STRUCTURES */
 typedef struct TMT TMT;

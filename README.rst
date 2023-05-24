@@ -3,33 +3,32 @@
 libtmt - a simple terminal emulation library
 ============================================
 
-libtmt is the Tiny Mock Terminal Library.  It provides emulation of a classic
-smart text terminal, by maintaining an in-memory screen image.  Sending text
+libtmt is the Tiny Mock Terminal Library.  It provides emulation of a
+text terminal by maintaining an in-memory screen image.  Sending text
 and command sequences to libtmt causes it to update this in-memory image,
 which can then be examined and rendered however the user sees fit.
 
-The imagined primary goal for libtmt is to for terminal emulators and
-multiplexers; it provides the terminal emulation layer for the `mtm`_
-terminal multiplexer, for example. Other uses include screen-scraping and
-automated test harnesses.
+The imagined primary use cases for libtmt are terminal emulators and
+multiplexers.  Other uses include screen-scraping and automated test
+harnesses.
 
-libtmt is similar in purpose to `libtsm`_, but considerably smaller (500
-lines versus 6500 lines). libtmt is also, in this author's humble opinion,
-considerably easier to use.
+Note!  `libtmt`_ was originally written by Rob King.  This is an updated
+fork.
 
-.. _`mtm`: https://github.com/deadpixi/mtm
-.. _`libtsm`: https://www.freedesktop.org/wiki/Software/kmscon/libtsm/
+.. _`libtmt`: https://github.com/deadpixi/libtmt
 
 Major Features and Advantages
 =============================
 
 Works Out-of-the-Box
-    libtmt emulates a well-known terminal type (`ansi`), the definition of
-    which has been in the terminfo database since at least 1995.  There's no
-    need to install a custom terminfo entry.  There's no claiming to be an
-    xterm but only emulating a small subset of its features. Any program
-    using terminfo works automatically: this includes vim, emacs, mc,
-    cmus, nano, nethack, ...
+    While libtmt does not currently emulate any other terminal with 100%
+    fidelity, it does a pretty decent job of emulating the well-known `linux`
+    terminal type.  A definition of this terminal has been in the terminfo
+    database since 2000 or before, so there is no need to install a custom
+    terminfo entry.  In addition, libtmt supports a number of terminal
+    control sequences from other popular terminals (e.g., `xterm`, `vt102`).
+    The emulation is good enough to work with vim, nano, dialog, and tmux,
+    for example.
 
 Portable
     Written in pure C99.
@@ -37,7 +36,7 @@ Portable
     provides minimal support for combining characters.
 
 Small
-    Less than 500 lines of C, including comments and whitespace.
+    Less than 1000 lines of C, including comments and whitespace.
 
 Free
     Released under a BSD-style license, free for commercial and
@@ -45,7 +44,7 @@ Free
     redistribution.
 
 Simple
-    Only 8 functions to learn, and really you can get by with 6!
+    Only 9 functions to learn, and really you can get by with 6!
 
 International
     libtmt internally uses wide characters exclusively, and uses your C
@@ -66,9 +65,9 @@ Example Code
 ------------
 
 Below is a simple program fragment giving the flavor of libtmt.
-Note that another good example is the `mtm`_ terminal multiplexer:
+Note that another good example is the `lilt`_ terminal emulator:
 
-.. _`mtm`: https://github.com/deadpixi/mtm
+.. _`lilt`: https://github.com/MurphyMc/lilt
 
 .. code:: c
 
@@ -165,10 +164,13 @@ Data Types and Enumerations
 
     /* possible messages sent to the callback */
     typedef enum{
-        TMT_MSG_MOVED,  /* the cursor changed position       */
-        TMT_MSG_UPDATE, /* the screen image changed          */
-        TMT_MSG_ANSWER, /* the terminal responded to a query */
-        TMT_MSG_BELL    /* the terminal bell was rung        */
+        TMT_MSG_MOVED,     /* the cursor changed position       */
+        TMT_MSG_UPDATE,    /* the screen image changed          */
+        TMT_MSG_ANSWER,    /* the terminal responded to a query */
+        TMT_MSG_BELL       /* the terminal bell was rung        */
+        TMT_MSG_CURSOR,    /* cursor visibility changed         */
+        TMT_MSG_SETMODE,   /* a terminal mode is being enabled  */
+        TMT_MSG_UNSETMODE, /* a terminal mode is being disabled */
     } tmt_msg_T;
 
     /* a callback for the library
@@ -178,6 +180,8 @@ Data Types and Enumerations
      *   is a pointer to the cursor's TMTPOINT for TMT_MSG_MOVED
      *   is a pointer to the terminal's TMTSCREEN for TMT_MSG_UPDATE
      *   is a pointer to a string for TMT_MSG_ANSWER
+     *   is a pointer to "t" or "f" for TMT_MSG_CURSOR
+     *   is a pointer to args of the mode for TMT_MSG_UNSETMODE
      * p is whatever was passed to tmt_open (see below).
      */
     typedef void (*TMTCALLBACK)(tmt_msg_t m, struct TMT *vt,
@@ -228,8 +232,8 @@ Data Types and Enumerations
      */
     typedef struct TMTLINE TMTLINE;
     struct TMTLINE{
-        bool dirty;     /* line has changed since it was last drawn */
-        TMTCHAR chars;  /* the contents of the line                 */
+        bool dirty;      /* line has changed since it was last drawn */
+        TMTCHAR chars[]; /* the contents of the line                 */
     };
 
     /* a virtual terminal screen image */
@@ -252,7 +256,9 @@ Functions
     Terminals must have a size of at least two rows and two columns.
 
     `acs` specifies the characters to use when in Alternate Character Set
-    (ACS) mode. The default string (used if `NULL` is specified) is::
+    (ACS) mode and for printing DEC Special Graphics characters (there is a
+    large amount of crossover). The default string (used if `NULL` is
+    specified) is::
 
          L"><^v#+:o##+++++~---_++++|<>*!fo"
 
@@ -304,6 +310,10 @@ Functions
 `void tmt_reset(TMT *vt);`
     Resets the virtual terminal to its default state (colors, multibyte
     decoding state, rendition, etc).
+
+`bool tmt_set_unicode_decode(TMT *vt, bool v);`
+    Enables to disables Unicode mapping.  If true, recognized Unicode
+    characters will be remapped to the equivalent ACS characters.
 
 Special Keys
 ------------
@@ -441,7 +451,8 @@ for all characters, so you should be able to use whatever characters you want
 when writing to the virtual terminal (but see `Alternate Character Set`_).
 
 The following escape sequences are recognized and will be processed
-specially.
+specially, though note that this list is not authoritative or exhaustive.
+At present, the real documentation is the source code.
 
 In the descriptions below, "ESC" means a literal escape character and "Ps"
 means zero or more decimal numeric arguments separated by semicolons.
@@ -464,6 +475,7 @@ Sequence                Action
 0x09 (Tab)              Cursor to next tab stop or end of line
 0x0a (Carriage Return)  Cursor to first cell on this line
 0x0d (Linefeed)         Cursor to same column one line down, scroll if needed
+ESC M                   Reverse linefeed, scroll if needed
 ESC H                   Set a tabstop in this column
 ESC 7                   Save cursor position and current graphical state
 ESC 8                   Restore saved cursor position and current graphical state
@@ -554,9 +566,6 @@ as equivalent in libtmt), and the various "Media Copy" escape sequences
 used to print output on paper (officially, there is no printer attached
 to libtmt).
 
-Additionally, "?" characters are stripped out of escape sequence parameter
-lists for compatibility purposes.
-
 Known Issues
 ============
 
@@ -578,39 +587,26 @@ that uses the terminfo, termcap, or (pd|n)?curses libraries.  Any program
 that assumes it's running under some specific terminal might fail if its
 assumption is wrong, and not just under libtmt.
 
-I've tested quite a few applications in libtmt and they've worked flawlessly:
-vim, GNU emacs, nano, cmus, mc (Midnight Commander), and others just work
-with no changes.
+Historically, quite a few applications have been tested and found to work
+work, including vim, GNU emacs, nano, cmus, mc (Midnight Commander), and
+others.  More recently, things that actually get tested decently are:
+vim, nano, dialog, readline, and tmux (and all of the above inside tmux).
 
 What programs don't work with libtmt?
 -------------------------------------
 
-Breakage with libtmt is of two kinds: breakage due to assuming a terminal
-type, and reduced functionality.
-
-In all my testing, I only found one program that didn't work correctly by
-default with libtmt: recent versions of Debian's `apt`_ assume a terminal
-with definable scrolling regions to draw a fancy progress bar during
-package installation.  Using apt in its default configuration in libtmt will
-result in a corrupted display (that can be fixed by clearing the screen).
-
-.. _`apt`: https://wiki.debian.org/Apt
-
-In my honest opinion, this is a bug in apt: it shouldn't assume the type
-of terminal it's running in.
-
-The second kind of breakage is when not all of a program's features are
-available.  The biggest missing feature here is mouse support: libtmt
-doesn't, and probably never will, support mouse tracking.  I know of many
-programs that *can* use mouse tracking in a terminal, but I don't know
-of any that *require* it.  Most (if not all?) programs of this kind would
-still be completely usable in libtmt.
+As of this writing, there are no programs known to not work with libtmt.
+This almost certainly just means nobody has noticed or reported the
+issue -- not that such issues don't exist.  Note that the correct
+operation of libtmt depends also on the terminfo entry being used.
+Changes to the terminfo can certainly break things.
 
 License
 -------
 
-Copyright (c) 2017 Rob King
-All rights reserved.
+| Copyright (c) 2023 Murphy McCauley
+| Copyright (c) 2017 Rob King
+| All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

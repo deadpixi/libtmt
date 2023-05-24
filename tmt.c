@@ -303,10 +303,10 @@ HANDLER(title)
     vt->title[vt->ntitle] = 0;
     if (vt->npar >= 1)
     {
-      if (vt->pars[0] == 0 || vt->pars[0] == 2)
-      {
-        CB(vt, TMT_MSG_TITLE, vt->title);
-      }
+        if (vt->pars[0] == 0 || vt->pars[0] == 2)
+        {
+            CB(vt, TMT_MSG_TITLE, vt->title);
+        }
     }
 }
 
@@ -404,12 +404,12 @@ handlechar(TMT *vt, char i)
 
     if (vt->state == S_TITLE)
     {
-      if ( (i >= 32) && (vt->ntitle < TITLE_MAX) )
-      {
-        vt->title[vt->ntitle] = i;
-        vt->ntitle += 1;
-        return true;
-      }
+        if ( (i >= 32) && (vt->ntitle < TITLE_MAX) )
+        {
+            vt->title[vt->ntitle] = i;
+            vt->ntitle += 1;
+            return true;
+         }
     }
 
     return resetparser(vt), false;

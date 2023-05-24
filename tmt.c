@@ -346,6 +346,19 @@ HANDLER(title)
 }
 
 static void
+reverse_nl(TMT *vt)
+{
+    COMMON_VARS;
+
+    vt->hang = 0;
+
+    if (c->r == vt->minline)
+        scrdn(vt, SCR_DEF, 1);
+    else if (c->r > 0)
+        c->r--;
+}
+
+static void
 nl(TMT *vt)
 {
     COMMON_VARS;
@@ -431,6 +444,7 @@ handlechar(TMT *vt, char i)
     DO(S_ESC, "8",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
     ON(S_ESC, "+*",         vt->ignored = true; vt->state = S_ARG)
     DO(S_ESC, "c",          tmt_reset(vt))
+    DO(S_ESC, "M",          reverse_nl(vt))
     ON(S_ESC, "[",          vt->state = S_ARG)
     ON(S_ESC, "]",          vt->state = S_TITLE_ARG)
     ON(S_ARG, "\x1b",       vt->state = S_ESC)

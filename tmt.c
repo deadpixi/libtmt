@@ -56,6 +56,9 @@ struct TMT{
     TMTPOINT curs, oldcurs;
     TMTATTRS attrs, oldattrs;
 
+    // Name of the terminal for XTVERSION (if null, use default).
+    char * terminal_name;
+
     bool dirty, acs, ignored;
     TMTSCREEN screen;
     TMTLINE *tabs;
@@ -74,7 +77,7 @@ struct TMT{
     size_t pars[PAR_MAX];   
     size_t npar;
     size_t arg;
-    enum {S_NUL, S_ESC, S_ARG, S_TITLE, S_TITLE_ARG} state;
+    enum {S_NUL, S_ESC, S_ARG, S_TITLE, S_TITLE_ARG, S_GT_ARG} state;
 };
 
 static TMTATTRS defattrs = {.fg = TMT_COLOR_DEFAULT, .bg = TMT_COLOR_DEFAULT};
@@ -294,6 +297,25 @@ HANDLER(title)
     }
 }
 
+static void
+xtversion(TMT *vt)
+{
+    char * name = "tmt(0.0.0)";
+    char * pre = "\033P>|";
+    char * post = "\033\\";
+    char buf[255] = {0};
+    if (vt->terminal_name)
+    {
+        size_t tot_len = strlen(pre)+strlen(post)+strlen(vt->terminal_name)+1;
+        if (tot_len <= sizeof(buf))
+            name = vt->terminal_name;
+    }
+    strcpy(buf, pre);
+    strcat(buf, name);
+    strcat(buf, post);
+    CB(vt, TMT_MSG_ANSWER, buf);
+}
+
 static bool
 handlechar(TMT *vt, char i)
 {
@@ -353,6 +375,9 @@ handlechar(TMT *vt, char i)
     DO(S_ARG, "l",          rm(vt))
     DO(S_ARG, "s",          vt->oldcurs = vt->curs; vt->oldattrs = vt->attrs)
     DO(S_ARG, "u",          vt->curs = vt->oldcurs; vt->attrs = vt->oldattrs)
+    ON(S_ARG, ">",          vt->state = S_GT_ARG)
+    DO(S_GT_ARG, "c",       CB(vt, TMT_MSG_ANSWER, "\033[>0;95c")) // Send Secondary DA (0=VT100, 95=old xterm)
+    DO(S_GT_ARG, "q",       xtversion(vt))
     DO(S_TITLE, "\a",       title(vt))
     DO(S_ARG, "@",          ich(vt))
 

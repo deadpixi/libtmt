@@ -50,7 +50,7 @@
     TMTLINE *l = CLINE(vt);     \
     TMTCHAR *t = vt->tabs->chars
 
-#define HANDLER(name) static void name (TMT *vt) { COMMON_VARS; 
+#define HANDLER(name) static void name (TMT *vt) { COMMON_VARS;
 
 struct TMT{
     TMTPOINT curs, oldcurs;
@@ -79,7 +79,7 @@ struct TMT{
     char title[TITLE_MAX + 1];
     size_t ntitle;
 
-    size_t pars[PAR_MAX];   
+    size_t pars[PAR_MAX];
     size_t npar;
     size_t arg;
     enum {S_NUL, S_ESC, S_ARG, S_TITLE, S_TITLE_ARG, S_GT_ARG, S_LPAREN, S_RPAREN} state;
@@ -168,7 +168,7 @@ scrdn(TMT *vt, size_t r, size_t n)
         memmove(vt->screen.lines + r + n, vt->screen.lines + r,
                 (vt->screen.nline - n - r) * sizeof(TMTLINE *));
         memcpy(vt->screen.lines + r, buf, n * sizeof(TMTLINE *));
-    
+
         clearlines(vt, r, n);
         dirtylines(vt, r, vt->screen.nline);
     }
